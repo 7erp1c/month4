@@ -1,6 +1,7 @@
 import {app} from "./app";
 import dotenv from 'dotenv'
-import {connectToDB} from "./db/connect-mongo-db";
+import {connectToDB} from "./db/connect-db"
+// import {connectToDB} from "./db/mongo-memory-server/connect-mongo-db";
 
 
 

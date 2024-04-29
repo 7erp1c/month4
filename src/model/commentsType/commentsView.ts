@@ -1,6 +1,5 @@
 //Input model type for comments
 export type CommentView = {
-
     id: string,
     content: string,
     commentatorInfo: {

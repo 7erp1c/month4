@@ -1,6 +1,6 @@
 
 import {createUserAccAuth} from "../model/usersType/inputModelTypeUsers";
-import {connectMongoDb} from "../db/connect-mongo-db";
+import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
 
 
 export const UsersRepository = {

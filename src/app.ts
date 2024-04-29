@@ -5,7 +5,7 @@ import {usersRouter} from "./router/users-router";
 import { authRouter } from './router/auth-router';
 import {commentsRouter} from "./router/comments/comments-router";
 import cookieParser from "cookie-parser";
-import {connectMongoDb} from "./db/connect-mongo-db";
+import {connectMongoDb} from "./db/mongo-memory-server/connect-mongo-db";
 import {apiReqLimitMiddleware} from "./middleware/authMiddleware/countAythDocumentsMiddleware";
 import useragent from 'express-useragent';
 import {securityRouter} from "./router/security/security-router";

@@ -2,7 +2,7 @@ import {createUserAccAuth, UsersInputType} from "../../../model/usersType/inputM
 import {ObjectId} from "mongodb";
 import {v4 as uuidv4} from "uuid";
 import {add} from "date-fns";
-import {connectMongoDb} from "../../../db/connect-mongo-db";
+import {connectMongoDb} from "../../../db/mongo-memory-server/connect-mongo-db";
 
 type registerUserType = {
     login: string,

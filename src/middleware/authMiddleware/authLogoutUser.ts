@@ -1,7 +1,7 @@
 import {NextFunction, Request, Response} from "express";
 import {JwtService} from "../../application/jwt-service";
 import {RefreshTokenRepository} from "../../repositories/old-token/refreshTokenRepository";
-import {connectMongoDb} from "../../db/connect-mongo-db";
+import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
 import {SecurityService} from "../../domain/security/security-service";
 
 

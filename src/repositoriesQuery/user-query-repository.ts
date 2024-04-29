@@ -10,7 +10,7 @@ import {getAuthUsersView, getUsersView} from "../model/usersType/getUsersView";
 import {Result} from "../model/result.type";
 import {ResultStatus} from "../_util/enum";
 import {getAuthTypeEndpointMe} from "../model/authType/authType";
-import {connectMongoDb} from "../db/connect-mongo-db";
+import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
 
 
 export const UsersQueryRepository = {

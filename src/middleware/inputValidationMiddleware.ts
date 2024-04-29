@@ -1,7 +1,7 @@
 import {body} from "express-validator";
 import {UsersService} from "../domain/users-service";
 import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
-import {connectMongoDb} from "../db/connect-mongo-db";
+import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
 
 export const blogsValidation = [
     body('name').trim().isString().isLength({min: 1, max: 15}),

@@ -1,18 +1,19 @@
+import mongoose from 'mongoose'
 import dotenv from "dotenv";
 import * as e from "express";
 import {Db, MongoClient} from "mongodb";
-import {createUserAccAuth} from "../model/usersType/inputModelTypeUsers";
-import {blogsView} from "../model/blogsType/blogsView";
-import {PostsView} from "../model/postsType/postsView";
-import {CommentView} from "../model/commentsType/commentsView";
-import {apiLogSchema, OldTokenDB, SessionsAddDB} from "../model/authType/authType";
-import {appConfig} from "../setting";
-import {app} from "../app";
+import {createUserAccAuth} from "../../model/usersType/inputModelTypeUsers";
+import {blogsView} from "../../model/blogsType/blogsView";
+import {PostsView} from "../../model/postsType/postsView";
+import {CommentView} from "../../model/commentsType/commentsView";
+import {apiLogSchema, OldTokenDB, SessionsAddDB} from "../../model/authType/authType";
+import {appConfig} from "../../setting";
+import {app} from "../../app";
 
 
 dotenv.config()
 
-const mongoURI = process.env.MONGO_URL || 'http://localhost:27017'
+const mongoURI = process.env.MONGO_URL || `mongodb://0.0.0.0:27017/${appConfig.DB_NAME}`
 console.log(process.env.MONGO_URL)
 if(!mongoURI){
     throw new Error("URL doesn\'t found")

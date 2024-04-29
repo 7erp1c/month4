@@ -1,5 +1,5 @@
 import {OldTokenDB} from "../../model/authType/authType";
-import {connectMongoDb} from "../../db/connect-mongo-db";
+import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
 
 
 export const RefreshTokenRepository =  {

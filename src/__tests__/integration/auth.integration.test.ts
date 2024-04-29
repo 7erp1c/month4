@@ -1,5 +1,5 @@
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {connectMongoDb} from "../../db/connect-mongo-db";
+import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
 import {AuthService} from "../../domain/auth-service";
 import {EmailsManager} from "../../managers/email-manager";
 import {testSeader} from "../e2e/utils/test.seader";

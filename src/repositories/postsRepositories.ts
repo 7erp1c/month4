@@ -1,6 +1,6 @@
 
 import {PostsView} from "../model/postsType/postsView";
-import {connectMongoDb} from "../db/connect-mongo-db";
+import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
 
 
 export const PostsRepositories = {

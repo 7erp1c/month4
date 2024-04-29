@@ -1,6 +1,18 @@
 import {ObjectId} from "mongodb";
 import {v4 as uuidv4} from "uuid";
 import {add} from "date-fns";
+export type SessionsAddDB = {
+    userId: string,
+    deviceId: string,
+    deviceTitle: string,
+    ip: string,
+    lastActiveDate: string,
+    refreshToken: {
+        createdAt: string,
+        expiredAt: string,
+    }
+}
+
 
 export type authView = {
     loginOrEmail: string,
@@ -17,12 +29,7 @@ export type twoTokenType = {
     access: string
     refresh: string
 }
-export type LoginData = {
-    loginOrEmail: string,
-    password: string,
-    ip: string,
-    deviceTitle: string
-}
+
 export interface OldTokenDB {
     oldToken: string,
     userId?: string,
@@ -41,17 +48,7 @@ export type RefreshTokenPayloadType = {
     iat: string
     exp: string
 }
-export type SessionsAddDB = {
-    userId: string,
-    deviceId: string,
-    deviceTitle: string,
-    ip: string,
-    lastActiveDate: string,
-    refreshToken: {
-        createdAt: string,
-        expiredAt: string,
-    }
-}
+
 export type getSecuritySessions = {
     ip: string,
     title: string,

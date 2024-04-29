@@ -1,6 +1,6 @@
 import {blogsView} from "../model/blogsType/blogsView";
 import {getBlogsView} from "../model/blogsType/getBlogsView";
-import {connectMongoDb} from "../db/connect-mongo-db";
+import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
 
 
 

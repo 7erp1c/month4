@@ -10,7 +10,7 @@ import request from "supertest"
 import {app} from "../../app";
 
 import {MongoMemoryServer} from "mongodb-memory-server";
-import {connectMongoDb} from "../../db/connect-mongo-db";
+import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
 import {CreateUsersThroughRegistration, CreateUserThroughRegistration} from "./utils/createUser";
 import {findIdDeviceSession, loginUser} from "./utils/loginUser";
 import jwt from "jsonwebtoken";
