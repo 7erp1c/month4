@@ -5,10 +5,12 @@ import {usersRouter} from "./router/users-router";
 import { authRouter } from './router/auth-router';
 import {commentsRouter} from "./router/comments/comments-router";
 import cookieParser from "cookie-parser";
-import {connectMongoDb} from "./db/mongo-memory-server/connect-mongo-db";
 import {apiReqLimitMiddleware} from "./middleware/authMiddleware/countAythDocumentsMiddleware";
 import useragent from 'express-useragent';
 import {securityRouter} from "./router/security/security-router";
+import mongoose from "mongoose";
+import {clearDatabase} from "./domain/delete-all-mongoose/delete-all-service";
+
 
 export const app = express()
 app.set("trust proxy", true);
@@ -23,7 +25,7 @@ app.use('/comments/',commentsRouter)
 app.use('/security/', apiReqLimitMiddleware, securityRouter)
 
 
-
+//затычка для проверки работы проекта
 app.get('/', (req: Request, res: Response) => {
     res
         .status(200)
@@ -32,7 +34,8 @@ app.get('/', (req: Request, res: Response) => {
 })
 app.delete('/testing/all-data', async (req, res) => {
     try {
-        await connectMongoDb.getDbName().dropDatabase();
+        await clearDatabase();
+        //await connectMongoDb.getDbName().dropDatabase();//memory server
         res.sendStatus(204); // Отправляем статус 204 после успешного удаления базы данных
     } catch (error) {
         console.error(error);

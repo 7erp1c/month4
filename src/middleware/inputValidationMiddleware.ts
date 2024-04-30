@@ -1,7 +1,8 @@
 import {body} from "express-validator";
 import {UsersService} from "../domain/users-service";
 import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
-import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
+import {BlogModel} from "../db/mongoose/models";
+
 
 export const blogsValidation = [
     body('name').trim().isString().isLength({min: 1, max: 15}),
@@ -17,7 +18,7 @@ export const postsValidation = [
     body('content').trim().isString().isLength({min: 1, max: 1000}).bail(),
     body('blogId').trim().isString().custom(
         async (value) => {
-            const blog = await connectMongoDb.getCollections().blogCollection.findOne({id: value});
+            const blog = await BlogModel.findOne({id: value});
             if (!blog) {
                 throw new Error("Blog not found");
             }
@@ -74,6 +75,14 @@ export const authCodeValidation = [
 
 export const commentValidation = [
     body("content").trim().isString().isLength({min: 20, max: 300}).bail()
+]
+
+export const passRecValidation =[
+    body("email").trim().isString().matches(new RegExp("^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$")).bail()
+]
+export const newPasswordValid =[
+    body("newPassword").trim().isString().isLength({max:20,min: 6}).bail(),
+    body("recoveryCode").trim().isString().bail()
 ]
 
 

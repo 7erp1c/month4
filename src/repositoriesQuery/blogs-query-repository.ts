@@ -5,7 +5,8 @@ import {
     SortBlogRepositoryType
 } from "../model/blogsType/blogsView";
 import {getBlogsView} from "../model/blogsType/getBlogsView";
-import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
+//import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
+import {BlogModel} from "../db/mongoose/models";
 
 
 
@@ -21,7 +22,7 @@ export const BlogsQueryRepository = {
         if (searchData.searchNameTerm) searchKey = {name: {$regex: searchData.searchNameTerm,$options:"i"}};
 
         // рассчитать лимиты для запроса к DB
-        const documentsTotalCount = await connectMongoDb.getCollections().blogCollection.countDocuments(searchKey); // Получите общее количество блогов
+        const documentsTotalCount = await BlogModel.countDocuments(searchKey); // Получите общее количество блогов
         const pageCount = Math.ceil(documentsTotalCount / +sortData.pageSize); // Рассчитайте общее количество страниц в соответствии с размером страницы
         const skippedDocuments = (+sortData.pageNumber - 1) * +sortData.pageSize; // Подсчитать количество пропущенных документов перед запрошенной страницей
 
@@ -37,7 +38,7 @@ export const BlogsQueryRepository = {
         else sortKey = {createdAt: sortDirection};
 
         // Получать документы из DB
-        const blogs: blogsView[] = await connectMongoDb.getCollections().blogCollection.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).toArray();
+        const blogs: blogsView[] = await BlogModel.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).lean();
 
         return {
             pagesCount: pageCount,
@@ -50,7 +51,7 @@ export const BlogsQueryRepository = {
 
      async getBlogById(id: string): Promise<blogsView | null> {
         try{
-            const blog: blogsView | null = await connectMongoDb.getCollections().blogCollection.findOne({id}, {projection: {_id: 0}});
+            const blog: blogsView | null = await BlogModel.findOne({id}, {projection: {_id: 0}});
             if (!blog) {
                 return null;
             }

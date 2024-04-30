@@ -1,6 +1,7 @@
 import {PostsView, PostsViewModelType, SortPostRepositoryType} from "../model/postsType/postsView";
 import {getPostsView} from "../model/postsType/getPostsView";
-import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
+//import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
+import {PostModel} from "../db/mongoose/models";
 
 
 export const PostsQueryRepository = {
@@ -13,7 +14,7 @@ export const PostsQueryRepository = {
         if (blogId) searchKey = {blogId: blogId};
 
          // есть ли у searchNameTerm параметр создания ключа поиска
-         const documentsTotalCount = await connectMongoDb.getCollections().postCollection.countDocuments(searchKey); // Receive total count of blogs
+         const documentsTotalCount = await PostModel.countDocuments(searchKey); // Receive total count of blogs
         const pageCount = Math.ceil(documentsTotalCount / +sortData.pageSize); // Calculate total pages count according to page size
         const skippedDocuments = (+sortData.pageNumber - 1) * +sortData.pageSize;
 
@@ -30,7 +31,7 @@ export const PostsQueryRepository = {
         else sortKey = {createdAt: sortDirection};
 
         // Получать документы из DB
-        const posts: PostsView[] = await connectMongoDb.getCollections().postCollection.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).toArray();
+        const posts: PostsView[] = await PostModel.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).lean();
 
         return {
             pagesCount: pageCount,
@@ -46,7 +47,7 @@ export const PostsQueryRepository = {
     // return one post by id
     async getPostById(id: string): Promise<PostsView | null> {
         try {
-            const post: PostsView | null = await connectMongoDb.getCollections().postCollection.findOne({id},{ projection: { _id: 0 }});
+            const post: PostsView | null = await PostModel.findOne({id},{ projection: { _id: 0 }});
             if (!post) {
                 return null;
             }

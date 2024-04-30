@@ -6,7 +6,7 @@ import {
     SortCommentsRepositoryType
 } from "../model/commentsType/commentsView";
 import {getCommentsView} from "../model/commentsType/getCommentsView";
-import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
+import {CommentsModel, PostModel} from "../db/mongoose/models";
 
 
 export const CommentsQueryRepository = {
@@ -19,7 +19,7 @@ export const CommentsQueryRepository = {
         if (postId) searchKey = {postId: postId};
 
         // есть ли у searchNameTerm параметр создания ключа поиска
-        const documentsTotalCount = await connectMongoDb.getCollections().commentsCollection.countDocuments(searchKey); // Receive total count of comments
+        const documentsTotalCount = await CommentsModel.countDocuments(searchKey); // Receive total count of comments
         const pageCount = Math.ceil(documentsTotalCount / +sortData.pageSize); // Calculate total pages count according to page size
         const skippedDocuments = (+sortData.pageNumber - 1) * +sortData.pageSize;
 
@@ -35,7 +35,7 @@ export const CommentsQueryRepository = {
         else sortKey = {createdAt: sortDirection};
 
         // Получаем comments из DB
-        const comments: CommentView[] = await connectMongoDb.getCollections().commentsCollection.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).toArray();
+        const comments: CommentView[] = await CommentsModel.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).lean();
 
         return {
             pagesCount: pageCount,
@@ -49,7 +49,7 @@ export const CommentsQueryRepository = {
     // return one post by id
     async getPostById(id: string): Promise<PostsView | null> {
         try {
-            const post: PostsView | null = await connectMongoDb.getCollections().postCollection.findOne({id},{ projection: { _id: 0 }});
+            const post: PostsView | null = await PostModel.findOne({id},{ projection: { _id: 0 }});
             if (!post) {
                 return null;
             }

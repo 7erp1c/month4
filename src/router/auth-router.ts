@@ -7,7 +7,7 @@ import {authTokenMiddleware} from "../middleware/authMiddleware/authTokenUser";
 import {
     authCodeValidation,
     authEmailValidation,
-    authValidation,
+    authValidation, newPasswordValid, passRecValidation,
     usersValidation
 } from "../middleware/inputValidationMiddleware";
 import {errorsValidation} from "../middleware/errorsValidation";
@@ -18,15 +18,16 @@ import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefre
 import {authTokenLogoutMiddleware} from "../middleware/authMiddleware/authLogoutUser";
 import {delay} from "../__tests__/e2e/utils/timer";
 import {addTokenInCookie} from "../managers/token-add-cookie";
+import {EmailsManager} from "../managers/email-manager";
 
 
 export const authRouter = Router({})
 authRouter
     .post('/login', authValidation, errorsValidation, async (req: RequestWithUsers<authView>, res: Response) => {
-        if (!req.body||!req.ip) return res.sendStatus(401)
+        if (!req.body || !req.ip) return res.sendStatus(401)
         const {loginOrEmail, password} = req.body
         const ip = req.ip || "unknown"
-        const userAgent = req.headers['user-agent']|| "unknown";
+        const userAgent = req.headers['user-agent'] || "unknown";
         //login, create token, create session, add data token  in db
         const loginUser = await AuthService.login(loginOrEmail, password, userAgent, ip)
         if (!loginUser.data || loginUser.status === ResultStatus.Unauthorized) return res.sendStatus(401)
@@ -39,13 +40,26 @@ authRouter
 
     })
 
+    .post("/password-recovery", passRecValidation, errorsValidation, async (req: Request, res: Response) => {
+        const {email} = req.body
+        const confirmation = await AuthService.confirmEmailForPass(email)
+        if (!confirmation) return res.sendStatus(400)
+        return res.status(204).send("Even if current email is not registered (for prevent user's email detection)")
+    })
+
+    .post("/new-password", newPasswordValid, errorsValidation, async (req: Request, res: Response) => {
+        const {newPassword, recoveryCode} = req.body
+        const updatePassword = await AuthService.updatePassword(newPassword,recoveryCode)
+        return res.status(204).send("If code is valid and new password is accepted")
+    })
+
     .post('/refresh-token', authRefreshTokenMiddleware, async (req: Request, res: Response) => {
         const {refreshToken} = req.cookies
         if (!req.userId || !refreshToken) return res.sendStatus(401)
         //the delay is so that the tokens are not the same
         await delay(200)
-        const twoToken = await JwtService.tokenUpdate(req.userId,refreshToken)
-        if (!twoToken.data||twoToken.status === ResultStatus.Unauthorized) return res.sendStatus(401)
+        const twoToken = await JwtService.tokenUpdate(req.userId, refreshToken)
+        if (!twoToken.data || twoToken.status === ResultStatus.Unauthorized) return res.sendStatus(401)
 
         addTokenInCookie(res, twoToken.data.refresh)
         return res.status(200).send({

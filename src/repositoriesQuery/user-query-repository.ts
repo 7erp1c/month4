@@ -10,7 +10,8 @@ import {getAuthUsersView, getUsersView} from "../model/usersType/getUsersView";
 import {Result} from "../model/result.type";
 import {ResultStatus} from "../_util/enum";
 import {getAuthTypeEndpointMe} from "../model/authType/authType";
-import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
+import {UserModel} from "../db/mongoose/models";
+
 
 
 export const UsersQueryRepository = {
@@ -32,7 +33,7 @@ export const UsersQueryRepository = {
                 };
             }
             // рассчитать лимиты для запроса к DB
-            const documentsTotalCount = await connectMongoDb.getCollections().usersCollection.countDocuments(searchKey); // Получите общее количество блогов
+            const documentsTotalCount = await UserModel.countDocuments(searchKey); // Получите общее количество блогов
             const pageCount = Math.ceil(documentsTotalCount / +sortData.pageSize); // Рассчитайте общее количество страниц в соответствии с размером страницы
             const skippedDocuments = (+sortData.pageNumber - 1) * +sortData.pageSize; // Подсчитать количество пропущенных документов перед запрошенной страницей
 
@@ -46,7 +47,7 @@ export const UsersQueryRepository = {
             else sortKey = {createdAt: sortDirection};
 
             // Получать документы из DB
-            const users: createUserAccAuth[] = await connectMongoDb.getCollections().usersCollection.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).toArray();
+            const users: createUserAccAuth[] = await UserModel.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).lean();
 
             return {
                 pagesCount: pageCount,
@@ -57,7 +58,7 @@ export const UsersQueryRepository = {
             }
         },
     async findUserById(id: string):Promise<Result<getAuthTypeEndpointMe| null>> {
-        const user: createUserAccAuth[]|null =  await connectMongoDb.getCollections().usersCollection.find({id}, {projection: {_id: 0}}).toArray()
+        const user: createUserAccAuth[]|null =  await UserModel.find({id}, {projection: {_id: 0}}).lean()
         if(!user) return {
             status: ResultStatus.Unauthorized,
             errorMessage: 'User was not found by id',
@@ -71,7 +72,7 @@ export const UsersQueryRepository = {
 
     },
     async findUserByIdAllModel(id: string):Promise<Result<createUserAccAuth| null>> {
-        const user =  await connectMongoDb.getCollections().usersCollection.findOne({id}, {projection: {_id: 0}})
+        const user =  await UserModel.findOne({id}, {projection: {_id: 0}})
         if(!user) return {
             status: ResultStatus.Unauthorized,
             errorMessage: 'User was not found by id',
@@ -85,7 +86,7 @@ export const UsersQueryRepository = {
 
     },
     async findUserByEmail(email: string) {
-        return await connectMongoDb.getCollections().usersCollection.findOne({"accountData.email": email}, {projection: {_id: 0}})
+        return  UserModel.findOne({"accountData.email": email}, {projection: {_id: 0}})
     }
 
 

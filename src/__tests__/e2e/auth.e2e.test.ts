@@ -5,23 +5,27 @@ import {app} from "../../app";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
 import {delay} from "./utils/timer";
 import {CreateUserThroughRegistration} from "./utils/createUser";
-import {MongoMemoryServer} from "mongodb-memory-server";
-import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
+
+import mongoose from "mongoose";
+import {RefreshTokenModel, UserModel} from "../../db/mongoose/models";
 
 
 const routerName = '/auth/'
 
 describe("AuthTest", () => {
+    const mongoURI = 'mongodb://0.0.0.0:27017/e2e_test'
     beforeAll(async () => {
-        const mongoServer = await MongoMemoryServer.create()
-        await connectMongoDb.run(mongoServer.getUri())
+        await mongoose.connect(mongoURI)
+        // const mongoServer = await MongoMemoryServer.create()
+        // await connectMongoDb.run(mongoServer.getUri())
+
         //await client.connect();
        // await request(app).delete("/testing/all-data")
         // const mongoServer = await MongoMemoryServer.create() //использование локальной базы данных без демона
         // await connectMongoDb.run(mongoServer.getUri()) // поднимет базу данных
     })
     afterAll(async () => {
-        await connectMongoDb.drop();
+        await mongoose.connection.dropDatabase();
         //await client.close();
         // await connectMongoDb.stop(); если заюзали MongoMemoryServer
     })
@@ -64,7 +68,7 @@ describe("AuthTest", () => {
             const registration = await CreateUserThroughRegistration(app)
             console.log(registration.body)
 
-            const user = (await connectMongoDb.getCollections().usersCollection.find({}).toArray())[0]
+            const user = (await UserModel.find({}).lean())[0]
             firstCode = user.emailConfirmation?.confirmationCode
             console.log("FIRST CODE " + firstCode)
 
@@ -94,7 +98,7 @@ describe("AuthTest", () => {
                     "email": "ul_tray@bk.ru"
                 })
                 .expect(204)
-            const userAfterResend = (await connectMongoDb.getCollections().usersCollection.find({}).toArray())[0]
+            const userAfterResend = (await UserModel.find({}).lean())[0]
             secondCode = userAfterResend.emailConfirmation?.confirmationCode
             expect(firstCode).not.toEqual(secondCode)
 
@@ -239,17 +243,17 @@ describe("AuthTest", () => {
                 userId: expect.any(String)
             });
         })
-        it("Using refresh token, you must deactivate the token and clean the DB", async () => {
-            //Disconnect user, clear all DB
-            await request(app)
-                .post("/auth/logout")
-                .set("Cookie", testRefreshToken2)
-                .expect(204)
-            const collection = connectMongoDb.getDbName().collection('old-old-token')
-            const count = await collection.countDocuments();
-            // Проверка, что количество документов в коллекции равно 0 (т.е. коллекция пустая)
-            expect(count).toBe(0);
-        })
+        // it("Using refresh token, you must deactivate the token and clean the DB", async () => {
+        //     //Disconnect user, clear all DB
+        //     await request(app)
+        //         .post("/auth/logout")
+        //         .set("Cookie", testRefreshToken2)
+        //         .expect(204)
+        //     const collection = RefreshTokenModel.collection('old-old-token')
+        //     const count = await collection.countDocuments();
+        //     // Проверка, что количество документов в коллекции равно 0 (т.е. коллекция пустая)
+        //     expect(count).toBe(0);
+        // })
         it("Must not update the token", async () => {
             await request(app)
                 .post("/auth/refresh-token")

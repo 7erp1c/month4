@@ -1,7 +1,7 @@
 import {NextFunction, Request, Response} from "express";
 import {JwtService} from "../../application/jwt-service";
 import {RefreshTokenRepository} from "../../repositories/old-token/refreshTokenRepository";
-import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
+
 import {SecurityService} from "../../domain/security/security-service";
 
 
@@ -36,8 +36,8 @@ export const authTokenLogoutMiddleware = async (req: Request, res: Response, nex
         return res.status(401).send('the token is invalid 2')
     }
 
-    if (refreshTokenStatusValid) {
+
         return next()
-    }
+
 
 }

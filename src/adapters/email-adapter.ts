@@ -39,5 +39,32 @@ export const EmailAdapter = {
         // }
         // main().catch(console.error);
 
+    },
+    async sendPassOnEmail(email: string, code: string) {
+        const transporter = nodemailer.createTransport({
+            service: 'gmail',// с гуглом остальное не надо
+            host: "smtp.gmail.com",
+            port: 587,
+            secure: false, // Use `true` for port 465, `false` for all other ports
+            //почта и пароль для рассылки:
+            auth: {
+                user: "th.great.forest@gmail.com", //My Email
+                pass: process.env.GMAIL_COM_PASS,  // My pass
+            },
+        });
+        //async function main() {// async..await is not allowed in global scope, must use a wrapper
+        // send mail with defined transport object
+        return await transporter.sendMail({
+            from: '"Ratmir" <th.great.forest@gmail.com>', // sender address
+            to: email,
+            subject: `User registration`,
+            html:  `<h1>Password recovery</h1>
+            <p>To finish password recovery please follow the link below:
+            <a href='https://somesite.com/password-recovery?recoveryCode=${code}'>recovery password</a>
+        </p>`
+
+
+    })
+
     }
 }

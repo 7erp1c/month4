@@ -1,8 +1,8 @@
 import {JwtService} from "../../application/jwt-service";
 import {SessionsAddDB} from "../../model/authType/authType";
 import {securityRepository} from "../../repositories/api/securityRepository";
-import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
 import {SecurityQueryRepository} from "../../repositoriesQuery/security-query-repository";
+import {RefreshTokenModel, SecurityModel} from "../../db/mongoose/models";
 
 export const SecurityService = {
     async createAuthSession(refreshToken: string, deviceTitle: string, ip: string) {
@@ -32,7 +32,7 @@ export const SecurityService = {
     },
     async deleteDevicesSessions(userId: string, token: string) {
         await securityRepository.deleteDevicesSessions(userId, token)
-        return await connectMongoDb.getCollections().securityCollection.countDocuments()
+        return  SecurityModel.countDocuments()
 
     },
     async deleteDevicesSessionById(id: string): Promise<boolean> {
@@ -60,7 +60,7 @@ export const SecurityService = {
         //удаляем сессию
         const delAllS = await SecurityService.deleteDevicesSessionById(decode?.deviceId)
         //удаляем токен из DB
-        const delAllT = await connectMongoDb.getCollections().refreshTokenCollection.deleteMany({deviceId: decode?.deviceId})
+        const delAllT = await RefreshTokenModel.deleteMany({deviceId: decode?.deviceId})
         if(!delAllS||!delAllT){
             return null
         }

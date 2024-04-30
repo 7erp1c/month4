@@ -6,28 +6,32 @@
 // Делаем logout девайсом 3. Запрашиваем список девайсов (девайсом 1).  В списке не должно быть девайса 3;
 // Удаляем все оставшиеся девайсы (девайсом 1).  Запрашиваем список девайсов. В списке должен содержаться только один (текущий) девайс;
 import request from "supertest"
-
 import {app} from "../../app";
 
-import {MongoMemoryServer} from "mongodb-memory-server";
-import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
+
 import {CreateUsersThroughRegistration, CreateUserThroughRegistration} from "./utils/createUser";
 import {findIdDeviceSession, loginUser} from "./utils/loginUser";
-import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import {UserModel} from "../../db/mongoose/models";
 
 const routerName = '/security/'
 //Комплексный тест по auth и security
 describe("AuthTest", () => {
+    const mongoURI = 'mongodb://0.0.0.0:27017/e2e_test'
     beforeAll(async () => {
-        const mongoServer = await MongoMemoryServer.create()
-        await connectMongoDb.run(mongoServer.getUri())
+
+        await mongoose.connect(mongoURI)
+        // const mongoServer = await MongoMemoryServer.create()
+        // await connectMongoDb.run(mongoServer.getUri())
+
         //await client.connect();
         // await request(app).delete("/testing/all-data")
         // const mongoServer = await MongoMemoryServer.create() //использование локальной базы данных без демона
         // await connectMongoDb.run(mongoServer.getUri()) // поднимет базу данных
     })
     afterAll(async () => {
-        await connectMongoDb.drop();
+        await mongoose.connection.dropDatabase();
+        // await connectMongoDb.drop();
         //await client.close();
         // await connectMongoDb.stop(); если заюзали MongoMemoryServer
     })
@@ -42,7 +46,7 @@ describe("AuthTest", () => {
             //registration 4 users
             const users = await CreateUsersThroughRegistration(app, 4)
 
-            const usersCount = await connectMongoDb.getCollections().usersCollection.countDocuments();
+            const usersCount = await UserModel.countDocuments();
             expect(usersCount).toEqual(4)
         })
         it("must create user", async () => {
@@ -51,7 +55,7 @@ describe("AuthTest", () => {
             //registration user
             const users = await CreateUserThroughRegistration(app)
             //
-            const usersCount = await connectMongoDb.getCollections().usersCollection.countDocuments();
+            const usersCount = await UserModel.countDocuments();
             expect(usersCount).toEqual(1)
         })
         //при логине, пошим token в массив refresh
@@ -69,7 +73,7 @@ describe("AuthTest", () => {
             //Все попытки входа были успешны
             expect(successfulLogins).toEqual(4);
             //Проверяем количество документов в коллекции
-            const userSessions = await connectMongoDb.getCollections().securityCollection.countDocuments();
+            const userSessions = await UserModel.countDocuments();
             expect(userSessions).toEqual(4)
         })
         it("must update token device 1", async () => {
@@ -78,7 +82,7 @@ describe("AuthTest", () => {
                 .set("Cookie", refresh[0])
                 .expect(200)
             //Проверяем количество документов в коллекции не должно измениться
-            const userSessions = await connectMongoDb.getCollections().securityCollection.countDocuments();
+            const userSessions = await UserModel.countDocuments();
             expect(userSessions).toEqual(4)
         })
         it("must return 4 documents", async () => {
@@ -144,7 +148,7 @@ describe("AuthTest", () => {
             //registration user
             const users = await CreateUserThroughRegistration(app)
             //
-            const usersCount = await connectMongoDb.getCollections().usersCollection.countDocuments();
+            const usersCount = await UserModel.countDocuments();
             expect(usersCount).toEqual(1)
         })
         let refresh: any[] = [];//refresh token device 1
@@ -161,7 +165,7 @@ describe("AuthTest", () => {
             //Все попытки входа были успешны
             expect(successfulLogins).toEqual(4);
             //Проверяем количество документов в коллекции
-            const userSessions = await connectMongoDb.getCollections().securityCollection.countDocuments();
+            const userSessions = await UserModel.countDocuments();
             expect(userSessions).toEqual(4)
         })
         it("must return error 429", async () => {

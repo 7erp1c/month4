@@ -2,7 +2,7 @@ import {createUserAccAuth, UsersInputType} from "../../../model/usersType/inputM
 import {ObjectId} from "mongodb";
 import {v4 as uuidv4} from "uuid";
 import {add} from "date-fns";
-import {connectMongoDb} from "../../../db/mongo-memory-server/connect-mongo-db";
+import {UserModel} from "../../../db/mongoose/models";
 
 type registerUserType = {
     login: string,
@@ -49,7 +49,7 @@ export const testSeader = {
         }
         console.log(newUser)
 
-        const res = await connectMongoDb.getCollections().usersCollection.insertOne({...newUser})
+        const res = await UserModel.create({...newUser})
         return {
             ...newUser
         }

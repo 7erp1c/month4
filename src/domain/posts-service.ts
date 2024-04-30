@@ -1,6 +1,7 @@
 import {PostsView} from "../model/postsType/postsView";
 import {PostsRepositories} from "../repositories/postsRepositories";
-import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
+import {BlogModel} from "../db/mongoose/models";
+
 
 
 
@@ -15,7 +16,7 @@ export const PostsService = {
     async createPosts( title: string, shortDescription: string, content: string, blogId:string):Promise<PostsView> {
 
         async function getNameByID(id: string): Promise<string | null> {
-            const blog = await connectMongoDb.getCollections().blogCollection
+            const blog = await BlogModel
                 .findOne({ id }, { projection: { _id: 0, name: 1 } });
             return blog ? blog.name : null;
         }

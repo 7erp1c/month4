@@ -1,23 +1,27 @@
-import {MongoMemoryServer} from "mongodb-memory-server";
-import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
+
 import {AuthService} from "../../domain/auth-service";
 import {EmailsManager} from "../../managers/email-manager";
 import {testSeader} from "../e2e/utils/test.seader";
 import {UsersService} from "../../domain/users-service";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
 import {delay} from "../e2e/utils/timer";
+import mongoose from "mongoose";
 
 describe("AuthTest-integration", () => {
+    const mongoURI = 'mongodb://0.0.0.0:27017/e2e_test'
     beforeAll(async () => {
-        const mongoServer = await MongoMemoryServer.create()
-        await connectMongoDb.run(mongoServer.getUri())
+        await mongoose.connect(mongoURI)
+        // const mongoServer = await MongoMemoryServer.create()
+        // await connectMongoDb.run(mongoServer.getUri())
 
     })
     beforeEach(async () => {
-        await connectMongoDb.drop()
+        await mongoose.connection.dropDatabase();
+        // await connectMongoDb.drop()
     })
     afterAll(async () => {
-        await connectMongoDb.drop();
+        await mongoose.connection.dropDatabase();
+        // await connectMongoDb.drop();
         //await client.close();
         // await connectMongoDb.stop(); если заюзали MongoMemoryServer
     })

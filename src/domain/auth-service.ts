@@ -11,6 +11,7 @@ import {ResultStatus} from "../_util/enum";
 import {JwtService} from "../application/jwt-service";
 import {Result} from "../model/result.type";
 import {twoTokenType} from "../model/authType/authType";
+import bcrypt from "bcrypt";
 
 
 export const AuthService = {
@@ -98,6 +99,21 @@ export const AuthService = {
             .sendMessageWitchConfirmationCode(user.accountData.email, user.accountData.login, user.emailConfirmation!.confirmationCode)
         return {status: true, message: ``}
     },
+    async confirmEmailForPass(email: string): Promise<{ status: boolean, message: string }> {
+
+        const newConfirmationCode = uuidv4()
+        const newDate = add(new Date(), {hours: 48}).toISOString()
+
+        const isUserUpdated = await UsersRepository.updateUserEmailConfirmationCode(email, newConfirmationCode, newDate)
+        if (!isUserUpdated) return {status: false, message: `user is confirmed user: ${isUserUpdated}`};
+
+        let user = await UsersQueryRepository.findUserByEmail(email)
+        if (!user) return {status: false, message: `user is confirmed user: ${user}`};
+
+        const sendEmail = await EmailsManager.EmailsManagerPass(user.accountData.email, user.emailConfirmation!.confirmationCode)
+        if(!sendEmail)return {status: false, message: `code has not been sent to the mail`}
+        return {status: true, message: ``}
+    },
 
     async refreshToken(oldToken: string) {
         const checkToken = await RefreshTokenRepository.checkToken(oldToken);
@@ -105,5 +121,22 @@ export const AuthService = {
             return null
         }
         return checkToken
+    },
+    async updatePassword(password: string, code: string) {
+        //находим user по code
+        const user = await UsersRepository.findUserByCode(code)
+        if (!user) return {status: false, message: `no user in db user: ${user}`};
+        if (!user.emailConfirmation?.isConfirmed) return {status: false, message: `user no confirmed: ${user}`};
+        if (code !== user.emailConfirmation?.confirmationCode) return {
+            status: false,
+            message: `code from front differs from code in db codes : ${code} ,${user.emailConfirmation?.confirmationCode}`
+        };
+        const passwordSalt = await bcrypt.genSalt(3)
+        const passwordHash = await UsersService._generateHash(password, passwordSalt)
+
+        const updatePassword = await UsersRepository.updatePassword(user.id,passwordHash)
+        if(!updatePassword)return false
+        return  true
+
     }
 }
