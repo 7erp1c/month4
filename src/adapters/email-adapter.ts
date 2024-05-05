@@ -40,7 +40,7 @@ export const EmailAdapter = {
         // main().catch(console.error);
 
     },
-    async sendPassOnEmail(email: string, code: string) {
+    async sendCodeRecoveryOnEmail(email: string, code: string) {
         const transporter = nodemailer.createTransport({
             service: 'gmail',// с гуглом остальное не надо
             host: "smtp.gmail.com",
@@ -57,7 +57,7 @@ export const EmailAdapter = {
         return await transporter.sendMail({
             from: '"Ratmir" <th.great.forest@gmail.com>', // sender address
             to: email,
-            subject: `User registration`,
+            subject: `Password recovery`,
             html:  `<h1>Password recovery</h1>
             <p>To finish password recovery please follow the link below:
             <a href='https://somesite.com/password-recovery?recoveryCode=${code}'>recovery password</a>

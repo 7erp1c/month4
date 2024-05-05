@@ -14,7 +14,7 @@ export type SessionsAddDB = {
 }
 
 
-export type authView = {
+export type authInput = {
     loginOrEmail: string,
     password: string
     ip:string

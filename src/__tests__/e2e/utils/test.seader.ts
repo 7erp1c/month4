@@ -45,7 +45,12 @@ export const testSeader = {
                 confirmationCode: uuidv4(),
                 expirationDate: add(new Date(), {hours: 48}).toISOString(),//дата истечения срока
                 isConfirmed: false
-            }
+            },
+            recoveryPassword:{
+            recoveryCode: uuidv4(),
+            expirationDate: add(new Date(), {hours: 48}).toISOString(),//дата истечения срока
+            isUsed: false
+        }
         }
         console.log(newUser)
 

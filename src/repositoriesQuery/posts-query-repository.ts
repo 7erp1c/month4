@@ -1,20 +1,27 @@
-import {PostsView, PostsViewModelType, SortPostRepositoryType} from "../model/postsType/postsView";
-import {getPostsView} from "../model/postsType/getPostsView";
+import {
+    PostLikeDto,
+    PostOutputType, PostsLikesInfoType,
+    PostsType,
+    PostsViewModelType,
+    SortPostRepositoryType
+} from "../model/postsType/postsType";
+import {getPostsView, postLikesMapper} from "../model/postsType/getPostsView";
 //import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
-import {PostModel} from "../db/mongoose/models";
+import {PostLikeModel, PostModel} from "../db/mongoose/models";
+
 
 
 export const PostsQueryRepository = {
 
-     async getAllPosts(sortData: SortPostRepositoryType, blogId?: string): Promise<PostsViewModelType> {
+    async getAllPosts(sortData: SortPostRepositoryType, blogId?: string): Promise<PostsViewModelType> {
         let searchKey = {}
         let sortKey = {};
         let sortDirection: number;
         //как искать
         if (blogId) searchKey = {blogId: blogId};
 
-         // есть ли у searchNameTerm параметр создания ключа поиска
-         const documentsTotalCount = await PostModel.countDocuments(searchKey); // Receive total count of blogs
+        // есть ли у searchNameTerm параметр создания ключа поиска
+        const documentsTotalCount = await PostModel.countDocuments(searchKey); // Receive total count of blogs
         const pageCount = Math.ceil(documentsTotalCount / +sortData.pageSize); // Calculate total pages count according to page size
         const skippedDocuments = (+sortData.pageNumber - 1) * +sortData.pageSize;
 
@@ -31,7 +38,12 @@ export const PostsQueryRepository = {
         else sortKey = {createdAt: sortDirection};
 
         // Получать документы из DB
-        const posts: PostsView[] = await PostModel.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).lean();
+        const posts: PostsType[] = await PostModel
+            .find(searchKey)
+            .sort(sortKey)
+            .skip(+skippedDocuments)
+            .limit(+sortData.pageSize)
+            .lean();
 
         return {
             pagesCount: pageCount,
@@ -45,9 +57,9 @@ export const PostsQueryRepository = {
 
 
     // return one post by id
-    async getPostById(id: string): Promise<PostsView | null> {
+    async getPostById(id: string): Promise<PostsType | null> {
         try {
-            const post: PostsView | null = await PostModel.findOne({id},{ projection: { _id: 0 }});
+            const post: PostsType | null = await PostModel.findOne({id}, {projection: {_id: 0}});
             if (!post) {
                 return null;
             }

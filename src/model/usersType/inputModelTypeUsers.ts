@@ -1,3 +1,5 @@
+import {add} from "date-fns";
+
 export type CreateUserRequest = {
     login: string,
     email: string,
@@ -32,6 +34,11 @@ export type createUserAccAuth = {
         confirmationCode: string,
         expirationDate: string,
         isConfirmed: boolean
+    },
+    recoveryPassword?: {
+        recoveryCode: string
+        expirationDate: string,//дата истечения срока
+        isUsed: boolean
     }
 }
 

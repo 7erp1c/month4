@@ -1,9 +1,10 @@
 import mongoose from "mongoose";
 import {createUserAccAuth} from "../../model/usersType/inputModelTypeUsers";
 import {blogsView} from "../../model/blogsType/blogsView";
-import {PostsView} from "../../model/postsType/postsView";
-import {CommentView} from "../../model/commentsType/commentsView";
-import {apiLogSchema, RefreshTokenPayloadType, SessionsAddDB} from "../../model/authType/authType";
+import {PostLikeDto, PostsType} from "../../model/postsType/postsType";
+import {CommentLikeDTO, CommentView, CommentViewOutput} from "../../model/commentsType/commentsType";
+import {apiLogSchema, OldTokenDB, RefreshTokenPayloadType, SessionsAddDB} from "../../model/authType/authType";
+import {add} from "date-fns";
 
 
 export const userSchema = new mongoose
@@ -13,11 +14,18 @@ export const userSchema = new mongoose
             login: {type: String, required: true},
             email: {type: String, required: true},
             passwordHash: String,
-            createdAt: Date,
+            passwordSalt: String,
+            createdAt: String,
         },
         emailConfirmation: {
             confirmationCode: String,
+            expirationDate: String,
             isConfirmed: {type: String, default: false},
+        },
+        recoveryPassword:{
+            recoveryCode: String,
+            expirationDate: String,//дата истечения срока
+            isUsed: {type: String, default: false}
         }
     });
 
@@ -32,18 +40,18 @@ export const blogSchema = new mongoose
     });
 
 export const postSchema = new mongoose
-    .Schema<PostsView>({
+    .Schema<PostsType>({
         id: {type: String, required: true},
         title: {type: String, required: true},
         shortDescription: {type: String, required: true},
         content: {type: String, required: true},
         blogId: {type: String, required: true},
         blogName: String,
-        createdAt: Date
+        createdAt: String
     });
 
 export const commentSchema = new mongoose
-    .Schema<CommentView>({
+    .Schema<CommentViewOutput>({
         id: {type: String, required: true},
         content: {type: String, required: true},
         postId: {type: String, required: true},
@@ -52,15 +60,15 @@ export const commentSchema = new mongoose
             userLogin: {type: String, required: true},
         },
         createdAt: Date,
-
     });
 
 export const refreshTokenSchema = new mongoose
-    .Schema<RefreshTokenPayloadType>({
+    .Schema<OldTokenDB>({
+        oldToken: {type: String, required: true},
         userId: {type: String, required: true},
         deviceId: {type: String, required: true},
-        iat: {type: String, required: true},
-        exp: {type: String, required: true},
+        isValid:{type: Boolean,default: true}
+
     });
 
 export const securitySchema = new mongoose
@@ -69,10 +77,10 @@ export const securitySchema = new mongoose
         deviceId: {type: String, required: true},
         deviceTitle: {type: String, required: true},
         ip: {type: String, required: true},
-        lastActiveDate: Date,
+        lastActiveDate: String,
         refreshToken: {
-            createdAt: {type: Number, required: true},
-            expiredAt: {type: Number, required: true},
+            createdAt: {type: String, required: true},
+            expiredAt: {type: String, required: true},
         }
     });
 
@@ -82,29 +90,16 @@ export const apiRequestSchema = new mongoose
         URL: String,
         date: Date,
     });
+export const commentLikeSchema = new mongoose.Schema<CommentLikeDTO>({
+    commentId: String,
+    likedUserId: String,
+    status: String,
+});
 
-
-
-
-
-
-
-
-
-
-
-
-
-// export const commentLikeSchema = new mongoose.Schema<CommentLikeDTO>({
-//     commentId: String,
-//     likedUserId: String,
-//     status: String,
-// });
-//
-// export const postLikeSchema = new mongoose.Schema<PostLikeDto>({
-//     postId: String,
-//     likedUserId: String,
-//     likedUserName: String,
-//     addedAt: String,
-//     status: String,
-// });
+export const postLikeSchema = new mongoose.Schema<PostLikeDto>({
+    postId: String,
+    likedUserId: String,
+    likedUserName: String,
+    addedAt: String,
+    status: String,
+});

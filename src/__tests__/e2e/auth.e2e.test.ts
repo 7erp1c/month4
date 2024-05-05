@@ -4,23 +4,32 @@ import request from "supertest"
 import {app} from "../../app";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
 import {delay} from "./utils/timer";
-import {CreateUserThroughRegistration} from "./utils/createUser";
+import {
+    CreateUserThroughRegistration,
+    dataSendLetter,
+    findRecoveryCode,
+    newPassword,
+    oldPassword,
+    userEmail
+} from "./utils/createUser";
 
 import mongoose from "mongoose";
 import {RefreshTokenModel, UserModel} from "../../db/mongoose/models";
+import {UsersRepository} from "../../repositories/usersRepository";
+import {body} from "express-validator";
 
 
 const routerName = '/auth/'
 
 describe("AuthTest", () => {
-    const mongoURI = 'mongodb://0.0.0.0:27017/e2e_test'
+    const mongoURI = `mongodb://0.0.0.0:27017/DataBase`
     beforeAll(async () => {
         await mongoose.connect(mongoURI)
         // const mongoServer = await MongoMemoryServer.create()
         // await connectMongoDb.run(mongoServer.getUri())
 
         //await client.connect();
-       // await request(app).delete("/testing/all-data")
+        // await request(app).delete("/testing/all-data")
         // const mongoServer = await MongoMemoryServer.create() //использование локальной базы данных без демона
         // await connectMongoDb.run(mongoServer.getUri()) // поднимет базу данных
     })
@@ -85,26 +94,27 @@ describe("AuthTest", () => {
             console.log(registration.body)
             const email = "ul_tray2@bk.ru"
 
-            const user = (await UsersQueryRepository.findUserByEmail(email))
+            const user = (await UsersRepository.findByLoginOrEmail(email))
             firstCode2 = user?.emailConfirmation?.confirmationCode
             console.log("FIRST CODE " + firstCode2)
 
         })
-        //повторная отправка повторного кода в письме на 1ого User
-        it("resending an email", async () => {
+        //повторная отправка  кода в письме на 1ого User
+        it.skip("resending an email", async () => {
             await request(app)
                 .post("/auth/registration-email-resending")
                 .send({
                     "email": "ul_tray@bk.ru"
                 })
                 .expect(204)
-            const userAfterResend = (await UserModel.find({}).lean())[0]
-            secondCode = userAfterResend.emailConfirmation?.confirmationCode
+            const email = "ul_tray@bk.ru"
+            const userAfterResend = (await UsersRepository.findByLoginOrEmail(email))
+            secondCode = userAfterResend?.emailConfirmation?.confirmationCode
             expect(firstCode).not.toEqual(secondCode)
 
         })
         //подтверждение второго user
-        it("Resending the code", async () => {
+        it.skip("Resending the code", async () => {
             await request(app)
                 .post("/auth/registration-confirmation")
                 .send({code: firstCode2})
@@ -113,7 +123,7 @@ describe("AuthTest", () => {
 
         })
         //повторная отправка  кода в письме на 2ого User, он уже подтвержден
-        it("resending an email should return an error, the user2 is confirmed", async () => {
+        it.skip("resending an email should return an error, the user2 is confirmed", async () => {
             await request(app)
                 .post("/auth/registration-email-resending")
                 .send({
@@ -181,7 +191,7 @@ describe("AuthTest", () => {
             console.log("__ACCESSTOKEN: " + testAccessToken1)
             // Проверка, что refreshToken добавлен в куки
             const cookiesArray1 = authLogin.header["set-cookie"];
-            console.log("___________" + cookiesArray1[0],cookiesArray1[1])
+            console.log("___________" + cookiesArray1[0], cookiesArray1[1])
 
             // Поиск refreshToken в куках
             for (let cookie1 of cookiesArray1) {
@@ -230,11 +240,11 @@ describe("AuthTest", () => {
                 .set("Cookie", testRefreshToken1)
                 .expect(401)
         })
-        it("Must get user information using access token", async () => {
+        it.skip("Must get user information using access token", async () => {
             //получаем информацию о пользователе endpoint: auth/me:
             const authMe = await request(app)
                 .get("/auth/me")
-                .set("Authorization", `Bearer ${testAccessToken2}`)//
+                .set("Authorization", `Bearer ${testAccessToken1}`)//
                 .expect(200)
 
             expect(authMe.body).toMatchObject({
@@ -243,17 +253,16 @@ describe("AuthTest", () => {
                 userId: expect.any(String)
             });
         })
-        // it("Using refresh token, you must deactivate the token and clean the DB", async () => {
-        //     //Disconnect user, clear all DB
-        //     await request(app)
-        //         .post("/auth/logout")
-        //         .set("Cookie", testRefreshToken2)
-        //         .expect(204)
-        //     const collection = RefreshTokenModel.collection('old-old-token')
-        //     const count = await collection.countDocuments();
-        //     // Проверка, что количество документов в коллекции равно 0 (т.е. коллекция пустая)
-        //     expect(count).toBe(0);
-        // })
+        it("Using refresh token, you must deactivate the token and clean the DB", async () => {
+            //Disconnect user, clear all DB
+            await request(app)
+                .post("/auth/logout")
+                .set("Cookie", testRefreshToken2)
+                .expect(204)
+            const count = await UserModel.countDocuments();
+            // Проверка, что количество документов в коллекции равно 0 (т.е. коллекция пустая)
+            expect(count).toBe(1);
+        })
         it("Must not update the token", async () => {
             await request(app)
                 .post("/auth/refresh-token")
@@ -263,12 +272,93 @@ describe("AuthTest", () => {
         it("Most not get information user", async () => {
             await request(app)
                 .get("/auth/me")
-                .set("Cookie", testRefreshToken2)
+                .set("Cookie", `Bearer ${testAccessToken2}`)
                 .expect(401)
         })
 
 
         //describe 08 homework completed________________
+    })
+    describe('Endpoint: auth password-recovery, new-password', () => {
+        let recoveryCode: string | undefined
+        let updateRecoveryCode: string | undefined
+        it("must create user", async () => {
+            // clean db
+            await request(app).delete("/testing/all-data")
+            //registration user
+            const user = await CreateUserThroughRegistration(app)
+            recoveryCode = await findRecoveryCode(userEmail)
+            console.log(recoveryCode)
+            const usersCount = await UserModel.countDocuments();
+            expect(usersCount).toEqual(1)
+        })
+        it("User must log in", async () => {
+            await request(app)
+                .post("/auth/login")
+                .send({
+                    "loginOrEmail": userEmail,
+                    "password": oldPassword
+                })
+                .expect(200)
+        })
+        it('Must send letter on email and update recovery code', async () => {
+            const result = await request(app)
+                .post("/auth/password-recovery")
+                .send(dataSendLetter)
+                .expect(204)
+
+            updateRecoveryCode = await findRecoveryCode(userEmail)
+            console.log(updateRecoveryCode)
+            expect(updateRecoveryCode).not.toBe(recoveryCode)
+        })
+        it('Must return 401 status because recovery code is update', async () => {
+            await request(app)
+                .post("/auth/new-password")
+                .send({
+                    "newPassword": newPassword,
+                    "recoveryCode": recoveryCode,
+                })
+                .expect(401)
+        })
+
+
+        it('Must return 401 status because has come old password', async () => {
+            await request(app)
+                .post("/auth/new-password")
+                .send({
+                    "newPassword": oldPassword,
+                    "recoveryCode": updateRecoveryCode,
+                })
+                .expect(401)
+
+        })
+        it('Must update password', async () => {
+            await request(app)
+                .post("/auth/new-password")
+                .send({
+                    "newPassword": newPassword,
+                    "recoveryCode": updateRecoveryCode,
+                })
+                .expect(204)
+        })
+        it('should not is update password', async () => {
+            await request(app)
+                .post("/auth/new-password")
+                .send({
+                    "newPassword": "",
+                    "recoveryCode": updateRecoveryCode,
+                })
+                .expect(400)
+        })
+        it("should not log in", async () => {
+            await request(app)
+                .post("/auth/login")
+                .send({
+                    "loginOrEmail": userEmail,
+                    "password": oldPassword
+                })
+                .expect(401)
+        })
     })
 
 

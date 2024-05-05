@@ -1,7 +1,7 @@
 import {ObjectId} from "mongodb";
 import {JwtService} from "../../application/jwt-service";
 import {CommentsRepositories} from "../../repositories/comments/commentsRepository";
-import {CommentViewOutput} from "../../model/commentsType/commentsView";
+import {CommentViewOutput} from "../../model/commentsType/commentsType";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
 import {ResultStatus} from "../../_util/enum";
 
@@ -15,7 +15,7 @@ export const CommentsService = {
 
         const user = await UsersQueryRepository.findUserById(userId)
 
-        let newComment = {
+        let newComment:CommentViewOutput = {
             id: new ObjectId().toString(),
             content: content,
             commentatorInfo: {
@@ -23,8 +23,12 @@ export const CommentsService = {
                 userLogin: user?.data?.login
             },
             createdAt: new Date().toISOString(),
-            postId: foundPostId
-
+            postId: foundPostId,
+            likesInfo:{
+                likesCount:0,
+                dislikesCount:0,
+                myStatus: "None"
+            }
         }
         const createdComment = await CommentsRepositories.createComments(newComment)
         return {
@@ -34,7 +38,12 @@ export const CommentsService = {
                 userId: createdComment.commentatorInfo.userId,
                 userLogin: createdComment.commentatorInfo.userLogin
             },
-            createdAt: createdComment.createdAt
+            createdAt: createdComment.createdAt,
+            likesInfo:{
+                likesCount:createdComment.likesInfo.likesCount,
+                dislikesCount: createdComment.likesInfo.dislikesCount,
+                myStatus:createdComment.likesInfo.myStatus
+            }
         }
     },
 

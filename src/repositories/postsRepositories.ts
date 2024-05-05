@@ -1,23 +1,23 @@
 
-import {PostsView} from "../model/postsType/postsView";
+import {PostsType} from "../model/postsType/postsType";
 //import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
 import {PostModel} from "../db/mongoose/models";
 
 
 export const PostsRepositories = {
     //get(/)
-    async findFullPosts():Promise<PostsView[]> {
+    async findFullPosts():Promise<PostsType[]> {
         return PostModel.find({},{ projection: { _id: 0 }}).lean()
     },
 //post(/)
 
-    async createPosts(newPosts:PostsView):Promise<PostsView> {
+    async createPosts(newPosts:PostsType):Promise<PostsType> {
         await PostModel.create(newPosts)
         return newPosts
 
     },
 //get(/id)
-    async  findPostsByID(id: string):Promise<PostsView|null> {
+    async  findPostsByID(id: string):Promise<PostsType|null> {
         return PostModel.findOne({id}, { projection: { _id: 0 }});
 
     },

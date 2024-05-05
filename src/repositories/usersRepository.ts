@@ -13,15 +13,29 @@ export const UsersRepository = {
     },
 
     async findByLoginOrEmail(loginOrEmail: string) {
-        return UserModel
-            .findOne({$or: [{"accountData.email": loginOrEmail}, {"accountData.login": loginOrEmail}]}).lean()
+        try {
+            const user = await UserModel.findOne({
+                $or: [
+                    { "accountData.email": loginOrEmail },
+                    { "accountData.login": loginOrEmail }
+                ]
+            }).lean()
+
+            return user;
+        } catch (err) {
+            return null
+
+        }
 
     },
     async findUserByCode(code: string) {
-        return UserModel.findOne({"emailConfirmation.confirmationCode": code}).lean()
+        return UserModel.findOne({"recoveryPassword.recoveryCode": code})
     },
     async findUserByLogin(login: string) {
-        return UserModel.findOne({"accountData.login": login}).lean()
+        return UserModel.findOne({"accountData.login": login})
+    },
+    async findUserById(id: string) {
+        return await UserModel.findOne({id:id}).lean()
     },
     //delete(/id)
     async deleteUser(id: string): Promise<boolean> {
@@ -34,18 +48,21 @@ export const UsersRepository = {
             .updateOne({id}, {$set: {'emailConfirmation.isConfirmed': true}})
         return result.modifiedCount === 1
     },
-    async updateUserEmailConfirmationCode(email: string, code: string,data:string) {
+    async UpdateRecoveryCode(email: string, code: string, data:string) {
         // try {
         const isUpdated = await UserModel
-            .updateOne({"accountData.email": email}, {$set: {"emailConfirmation.confirmationCode": code,"emailConfirmation.expirationDate":data}});
+            .updateOne({"accountData.email": email},
+                {$set: {"recoveryPassword.recoveryCode": code,"recoveryPassword.expirationDate":data,"recoveryPassword.isUsed":false}});
+        console.log("isUpdated.matchedCount", isUpdated.matchedCount)
         return isUpdated.matchedCount === 1;
         // }catch (err){
         //     return new Error("Not update confirmationCode")
         // }
     },
-    async updatePassword(id:string,password:string){
+    async updatePassword(id:string,password:string,passwordSalt:string){
+        console.log("ID переданный для обновления:", id);
         const isUpdated = await UserModel
-            .updateOne({id}, {$set: {passwordHash: password}});
+            .updateOne({id:id}, {$set: {"accountData.passwordHash": password,"accountData.passwordSalt":passwordSalt,"recoveryPassword.isUsed":true}});
         return isUpdated.matchedCount === 1;
     }
 

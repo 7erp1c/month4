@@ -13,4 +13,7 @@ export const expiresIn = {
     accessTime: "1000s",
     refreshTime: "2000s"
 };
-
+export const AUTH_METHODS={
+    base: "Basic",
+    bearer: "Bearer"
+};

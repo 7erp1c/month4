@@ -21,6 +21,6 @@ export const RefreshTokenRepository =  {
     },
     async invalidateToken(token:string){
          const checkToken = await RefreshTokenModel.findOne({ oldToken:token})
-        return checkToken?.$isValid
+        return checkToken?.isValid
     }
 }

@@ -3,5 +3,6 @@ export enum ResultStatus {
     Forbidden = "Forbidden",
     Success = "Success",
     Unauthorized = "Unauthorized",
-    BadRequest = 'BadRequest'
+    BadRequest = 'BadRequest',
+    NoContent = 'NoContent'
 }

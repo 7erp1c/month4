@@ -1,17 +1,17 @@
-import {PostsView} from "../model/postsType/postsView";
+import { PostsType} from "../model/postsType/postsType";
 import {getPostsView} from "../model/postsType/getPostsView";
 import {
-    CommentsViewModelType,
-    CommentView,
+    CommentsViewModelType, CommentViewOutput, LikesInfoType, LikeStatusType,
     SortCommentsRepositoryType
-} from "../model/commentsType/commentsView";
+} from "../model/commentsType/commentsType";
 import {getCommentsView} from "../model/commentsType/getCommentsView";
-import {CommentsModel, PostModel} from "../db/mongoose/models";
+import {CommentLikeModel, CommentsModel, PostLikeModel, PostModel} from "../db/mongoose/models";
+
 
 
 export const CommentsQueryRepository = {
 
-    async getAllCommentsWithPosts(sortData: SortCommentsRepositoryType, postId?: string): Promise<CommentsViewModelType> {
+    async getAllCommentsWithPosts(sortData: SortCommentsRepositoryType, postId?: string,userId?:string): Promise<CommentsViewModelType> {
         let searchKey = {}
         let sortKey = {};
         let sortDirection: number;
@@ -35,21 +35,32 @@ export const CommentsQueryRepository = {
         else sortKey = {createdAt: sortDirection};
 
         // Получаем comments из DB
-        const comments: CommentView[] = await CommentsModel.find(searchKey).sort(sortKey).skip(+skippedDocuments).limit(+sortData.pageSize).lean();
+        const comments = await CommentsModel
+            .find(searchKey)
+            .sort(sortKey)
+            .skip(+skippedDocuments)
+            .limit(+sortData.pageSize)
+            .lean();
 
+        const mappedComments:CommentViewOutput[]=[];
+
+        for (let i= 0; i<comments.length; i++){
+            const likes:LikesInfoType = await this.getLikes(comments[i].id.toString(), userId);
+            mappedComments.push(getCommentsView(comments[i], likes));
+        }
         return {
             pagesCount: pageCount,
             page: +sortData.pageNumber,
             pageSize: +sortData.pageSize,
             totalCount: documentsTotalCount,
-            items: comments.map(getCommentsView)
+            items: mappedComments
         };
 
     },
     // return one post by id
-    async getPostById(id: string): Promise<PostsView | null> {
+    async getPostById(id: string): Promise<PostsType | null> {
         try {
-            const post: PostsView | null = await PostModel.findOne({id},{ projection: { _id: 0 }});
+            const post: PostsType | null = await PostModel.findOne({id},{ projection: { _id: 0 }});
             if (!post) {
                 return null;
             }
@@ -57,6 +68,24 @@ export const CommentsQueryRepository = {
         } catch (err) {
             return null;
         }
+    },
+    async getLikes(commentId:string, userId?:string):Promise<LikesInfoType>{
+        let likeStatus:LikeStatusType = "None";
+
+        if (userId) {
+            const userLike = await CommentLikeModel.findOne({$and: [{commentId: commentId}, {likedUserId: userId}]}).lean();
+            if (userLike) {
+                likeStatus = userLike.status;
+            }
+        }
+
+        const likesCount =  await CommentLikeModel.countDocuments({$and: [{commentId: commentId}, {status:"Like"}]});
+        const dislikesCount =  await CommentLikeModel.countDocuments({$and: [{commentId: commentId}, {status:"Dislike"}]});
+        return 	{
+            likesCount: likesCount,
+            dislikesCount: dislikesCount,
+            myStatus: likeStatus
+        };
     }
 }
 

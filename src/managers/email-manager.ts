@@ -19,10 +19,10 @@ export const EmailsManager = {
 
     },
 
-    async EmailsManagerPass(email: string, code:string) {
+    async EmailsManagerRecovery(email: string, code:string) {
       //отправку сообщения лучше обернуть в try-catch, чтобы при ошибке(например отвалиться отправка) приложение не падало
         try {
-            await EmailAdapter.sendPassOnEmail(//отправить сообщение на почту юзера с кодом подтверждения
+            await EmailAdapter.sendCodeRecoveryOnEmail(//отправить сообщение на почту юзера с кодом подтверждения
                 email,
                 code
             )

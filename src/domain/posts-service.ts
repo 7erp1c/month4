@@ -1,26 +1,18 @@
-import {PostsView} from "../model/postsType/postsView";
+import {PostsType} from "../model/postsType/postsType";
 import {PostsRepositories} from "../repositories/postsRepositories";
 import {BlogModel} from "../db/mongoose/models";
-
-
-
+import {BlogsService} from "./blogs-service";
 
 
 export const PostsService = {
     //get(/)
-    async findFullPosts():Promise<PostsView[]> {
+    async findFullPosts(): Promise<PostsType[]> {
         return PostsRepositories.findFullPosts()
     },
 //post(/)
 
-    async createPosts( title: string, shortDescription: string, content: string, blogId:string):Promise<PostsView> {
-
-        async function getNameByID(id: string): Promise<string | null> {
-            const blog = await BlogModel
-                .findOne({ id }, { projection: { _id: 0, name: 1 } });
-            return blog ? blog.name : null;
-        }
-        const blogName = await getNameByID(blogId)||'';
+    async createPosts(title: string, shortDescription: string, content: string, blogId: string): Promise<PostsType> {
+        const blog = await BlogsService.findBlogsByID(blogId)
 
         let newPosts = {
             id: (+new Date()).toString(),
@@ -28,24 +20,24 @@ export const PostsService = {
             shortDescription: shortDescription,
             content: content,
             blogId: blogId,
-            blogName: blogName,
+            blogName: blog!.name,
             createdAt: new Date().toISOString()
 
         };
         const createdPosts = await PostsRepositories.createPosts(newPosts)
-        let newPostsWithoutId = {...createdPosts} as any;
+        let newPostsWithoutId = {...newPosts} as any;
         delete newPostsWithoutId._id;
 
-        return newPostsWithoutId as PostsView;
+        return newPostsWithoutId as PostsType;
     },
 
 //get(/id)
-    async  findPostsByID(id: string):Promise<PostsView|null> {
+    async findPostsByID(id: string): Promise<PostsType | null> {
         return PostsRepositories.findPostsByID(id)
     },
 //put(/id)
-    async updatePosts(id: string, title: string, shortDescription: string, content: string, blogId:string):Promise<boolean> {
-        return await PostsRepositories.updatePosts(id,title,shortDescription,content,blogId)
+    async updatePosts(id: string, title: string, shortDescription: string, content: string, blogId: string): Promise<boolean> {
+        return await PostsRepositories.updatePosts(id, title, shortDescription, content, blogId)
     },
 //delete(/id)
     async deletePosts(id: string): Promise<boolean> {

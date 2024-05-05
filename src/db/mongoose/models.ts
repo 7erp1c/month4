@@ -1,8 +1,8 @@
 import mongoose from "mongoose";
 import {
     apiRequestSchema,
-    blogSchema,
-    commentSchema,
+    blogSchema, commentLikeSchema,
+    commentSchema, postLikeSchema,
     postSchema,
     refreshTokenSchema,
     securitySchema,
@@ -17,23 +17,6 @@ export const CommentsModel = mongoose.model("comments", commentSchema);
 export const RefreshTokenModel = mongoose.model("refreshTokens", refreshTokenSchema);
 export const ApiRequestModel = mongoose.model("apiRequests", apiRequestSchema);
 export const SecurityModel = mongoose.model("security", securitySchema);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// export const CommentLikeModel = mongoose.model("commentsLikes", commentLikeSchema);
-// export const PostLikeModel = mongoose.model("postsLikes", postLikeSchema);
+export const CommentLikeModel = mongoose.model("commentsLikes", commentLikeSchema);
+export const PostLikeModel = mongoose.model("postsLikes", postLikeSchema);
 

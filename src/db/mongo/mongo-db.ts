@@ -17,7 +17,7 @@
 // export let dbName = connectMongoDb.getDbName();
 
 // export const blogCollection: Collection<blogsView> = dbName.collection<blogsView>("blogs")
-// export const postCollection: Collection<PostsView> = dbName.collection<PostsView>("posts")
+// export const postCollection: Collection<PostsType> = dbName.collection<PostsType>("posts")
 // export const usersCollection: Collection<createUserAccountThroughAuth> = dbName.collection<createUserAccountThroughAuth>("users")
 // export const commentsCollection: Collection<CommentView> = dbName.collection<CommentView>("comments")
 // export  const refreshTokenCollection:Collection<OldTokenDB> = dbName.collection<OldTokenDB>("old-old-token")

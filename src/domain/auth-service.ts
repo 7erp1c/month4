@@ -6,12 +6,13 @@ import {v4 as uuidv4} from "uuid";
 import {add} from "date-fns";
 import {RefreshTokenRepository} from "../repositories/old-token/refreshTokenRepository";
 import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
-import {json} from "express";
 import {ResultStatus} from "../_util/enum";
 import {JwtService} from "../application/jwt-service";
 import {Result} from "../model/result.type";
 import {twoTokenType} from "../model/authType/authType";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import {settings} from "../setting";
 
 
 export const AuthService = {
@@ -23,6 +24,7 @@ export const AuthService = {
             extensions: [{field: 'user', message: "User registration failed(AuthService)"}],
             data: null,
         }
+
         const deviceTitle = userAgent.split(" ")[1] || 'unknown';
         //create token
         const twoToken = await JwtService.twoToken(user.data.id, deviceTitle, ip)
@@ -59,7 +61,7 @@ export const AuthService = {
             return null
         }
 
-        const sendEmail = await EmailsManager
+         EmailsManager
             .sendMessageWitchConfirmationCode(findUser.data.accountData.email, findUser.data.accountData.login, findUser.data.emailConfirmation.confirmationCode)
         return user
     },
@@ -83,38 +85,23 @@ export const AuthService = {
         return {status: true, message: ``}
 
     },
-
+     //повторная отправка email
     async confirmEmail(email: string): Promise<{ status: boolean, message: string }> {
 
         const newConfirmationCode = uuidv4()
         const newDate = add(new Date(), {hours: 48}).toISOString()
 
-        const isUserUpdated = await UsersRepository.updateUserEmailConfirmationCode(email, newConfirmationCode, newDate)
+        const isUserUpdated = await UsersRepository.UpdateRecoveryCode(email, newConfirmationCode, newDate)
         if (!isUserUpdated) return {status: false, message: `user is confirmed user: ${isUserUpdated}`};
 
         let user = await UsersQueryRepository.findUserByEmail(email)
+
         if (!user) return {status: false, message: `user is confirmed user: ${user}`};
 
-        const sendEmail = await EmailsManager
+         EmailsManager
             .sendMessageWitchConfirmationCode(user.accountData.email, user.accountData.login, user.emailConfirmation!.confirmationCode)
         return {status: true, message: ``}
     },
-    async confirmEmailForPass(email: string): Promise<{ status: boolean, message: string }> {
-
-        const newConfirmationCode = uuidv4()
-        const newDate = add(new Date(), {hours: 48}).toISOString()
-
-        const isUserUpdated = await UsersRepository.updateUserEmailConfirmationCode(email, newConfirmationCode, newDate)
-        if (!isUserUpdated) return {status: false, message: `user is confirmed user: ${isUserUpdated}`};
-
-        let user = await UsersQueryRepository.findUserByEmail(email)
-        if (!user) return {status: false, message: `user is confirmed user: ${user}`};
-
-        const sendEmail = await EmailsManager.EmailsManagerPass(user.accountData.email, user.emailConfirmation!.confirmationCode)
-        if(!sendEmail)return {status: false, message: `code has not been sent to the mail`}
-        return {status: true, message: ``}
-    },
-
     async refreshToken(oldToken: string) {
         const checkToken = await RefreshTokenRepository.checkToken(oldToken);
         if (!checkToken) {
@@ -122,21 +109,51 @@ export const AuthService = {
         }
         return checkToken
     },
-    async updatePassword(password: string, code: string) {
+    async sendRecoveryCode(email: string): Promise<{ status: boolean, message: string }> {
+
+        let user = await UsersRepository.findByLoginOrEmail(email)
+        if (!user) return {status: false, message: `user is confirmed user: ${user}`};
+
+        const newRecoveryCode = uuidv4()
+        console.log("newRecoveryCode: ",newRecoveryCode)
+        const newDate = add(new Date(), {hours: 48}).toISOString()
+        //обновляем код, статус на false,дату
+        const UpdateRecoveryCode = await UsersRepository.UpdateRecoveryCode(email, newRecoveryCode, newDate)
+
+        if (!UpdateRecoveryCode) return {status: false, message: `user is confirmed user: ${UpdateRecoveryCode}`};
+
+         EmailsManager
+            .EmailsManagerRecovery(email, newRecoveryCode)
+
+        return {status: true, message: ``}
+    },
+    async updatePassword(password: string, code: string): Promise<{ status: boolean, message: string }> {
         //находим user по code
         const user = await UsersRepository.findUserByCode(code)
+        //проверим пароль совпадает со старым или нет
         if (!user) return {status: false, message: `no user in db user: ${user}`};
-        if (!user.emailConfirmation?.isConfirmed) return {status: false, message: `user no confirmed: ${user}`};
-        if (code !== user.emailConfirmation?.confirmationCode) return {
+
+        if(user.recoveryPassword?.isUsed === true)return {status: false, message: `the code is used: status code ${user.recoveryPassword?.isUsed}`};
+        if (!user.recoveryPassword?.recoveryCode) return {status: false, message: `user no code ${user}`};
+        if (code !== user.recoveryPassword?.recoveryCode) return {
             status: false,
-            message: `code from front differs from code in db codes : ${code} ,${user.emailConfirmation?.confirmationCode}`
+            message: `code from front differs from code in db codes : ${code} ,${user.recoveryPassword?.recoveryCode}`
         };
-        const passwordSalt = await bcrypt.genSalt(3)
+        const passwordSalt = user.accountData.passwordSalt!
         const passwordHash = await UsersService._generateHash(password, passwordSalt)
+        if (passwordHash === user.accountData.passwordHash)return {status: false, message: `the password cannot be used because it was entered earlier, enter a new password`}
 
-        const updatePassword = await UsersRepository.updatePassword(user.id,passwordHash)
-        if(!updatePassword)return false
-        return  true
+        const updatePassword = await UsersRepository.updatePassword(user.id,passwordHash,passwordSalt)
+        if(!updatePassword)return {status: false, message: `not update document`}
+        return {status: true, message: ``}
 
+    },
+    async getUserIdByToken(token:string):Promise<string|null>{
+        try {
+            const result:any = jwt.verify(token, settings.JWT_SECRET);
+            return result.userId;
+        }catch (err){
+            return null;
+        }
     }
 }

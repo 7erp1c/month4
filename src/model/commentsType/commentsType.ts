@@ -1,23 +1,55 @@
 //Input model type for comments
-export type CommentView = {
-    id: string,
-    content: string,
-    commentatorInfo: {
-        userId: string | undefined,
-        userLogin: string | undefined
-    },
-    createdAt: string,
-    postId: string
+export type InputCommentLikesType = {
+    likeStatus: LikeStatusType
 }
-//Output model type for comments
-export type CommentViewOutput ={
-    id: string,
-    content: string,
+
+
+export type LikeStatusType =  "None" | "Like" | "Dislike"
+
+
+export type LikesInfoType = {
+    likesCount: number
+    dislikesCount: number
+    myStatus: LikeStatusType
+}
+//для ендпоинта post comments(возвращаем)
+export type CommentViewInput ={
+    id: string
+    content: string
     commentatorInfo: {
-        userId: string | undefined,
+        userId: string | undefined
         userLogin: string | undefined
     },
     createdAt: string
+    likesInfo: LikesInfoType
+}
+//Output model type for comments
+export type CommentView = {
+    id: string
+    postId: string
+    content: string
+    commentatorInfo: {
+        userId: string | undefined
+        userLogin: string | undefined
+    },
+    createdAt: string
+}
+//создаем в bd такую модель:
+export type CommentViewOutput ={
+    id: string
+    content: string
+    commentatorInfo: {
+        userId: string | undefined
+        userLogin: string | undefined
+    },
+    createdAt: string
+    postId?: string
+    likesInfo: LikesInfoType
+}
+export type CommentLikeDTO = {
+    commentId: string
+    likedUserId: string
+    status: LikeStatusType
 }
 //For query repository_______________________________________________________________
 export type CommentsViewModelType={

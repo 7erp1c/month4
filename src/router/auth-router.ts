@@ -1,6 +1,6 @@
 import {Request, Response, Router} from "express";
 import {UsersService} from "../domain/users-service";
-import {authView} from "../model/authType/authType";
+import {authInput} from "../model/authType/authType";
 import {RequestWithUsers} from "../typeForReqRes/helperTypeForReq";
 import {JwtService} from "../application/jwt-service";
 import {authTokenMiddleware} from "../middleware/authMiddleware/authTokenUser";
@@ -23,33 +23,33 @@ import {EmailsManager} from "../managers/email-manager";
 
 export const authRouter = Router({})
 authRouter
-    .post('/login', authValidation, errorsValidation, async (req: RequestWithUsers<authView>, res: Response) => {
-        if (!req.body || !req.ip) return res.sendStatus(401)
+    .post('/login', authValidation, errorsValidation, async (req: RequestWithUsers<authInput>, res: Response) => {
+        //if (!req.body || !req.ip) return res.status(401).send("not body")
         const {loginOrEmail, password} = req.body
         const ip = req.ip || "unknown"
         const userAgent = req.headers['user-agent'] || "unknown";
         //login, create token, create session, add data token  in db
         const loginUser = await AuthService.login(loginOrEmail, password, userAgent, ip)
-        if (!loginUser.data || loginUser.status === ResultStatus.Unauthorized) return res.sendStatus(401)
+        if (loginUser.status === ResultStatus.Unauthorized) return res.sendStatus(401)
         //закидываем токен в cookie (module в managers)
-        addTokenInCookie(res, loginUser.data.refresh)
+        addTokenInCookie(res, loginUser.data!.refresh)
 
         return res.status(200).send({
-            accessToken: loginUser.data.access
+            accessToken: loginUser.data!.access
         })
 
     })
 
     .post("/password-recovery", passRecValidation, errorsValidation, async (req: Request, res: Response) => {
         const {email} = req.body
-        const confirmation = await AuthService.confirmEmailForPass(email)
-        if (!confirmation) return res.sendStatus(400)
+        await AuthService.sendRecoveryCode(email)
         return res.status(204).send("Even if current email is not registered (for prevent user's email detection)")
     })
 
     .post("/new-password", newPasswordValid, errorsValidation, async (req: Request, res: Response) => {
         const {newPassword, recoveryCode} = req.body
-        const updatePassword = await AuthService.updatePassword(newPassword,recoveryCode)
+        const updatePassword = await AuthService.updatePassword(newPassword, recoveryCode)
+        if(!updatePassword.status) return res.status(401).send(updatePassword.message)
         return res.status(204).send("If code is valid and new password is accepted")
     })
 
@@ -89,7 +89,6 @@ authRouter
     .post('/registration', usersValidation, errorsValidation, async (req: Request, res: Response) => {
 
         const {login, email, password} = req.body
-
         const user = await AuthService.createUser(login, password, email)
         if (!user) {
             return res.sendStatus(400)
@@ -103,12 +102,12 @@ authRouter
     })
 
     //повторная отправка email
-    .post('/registration-email-resending', authEmailValidation, errorsValidation, async (req: Request, res: Response) => {
+    .post('/registration-email-resending', async (req: Request, res: Response) => {
         const {email} = req.body
-
         const result = await AuthService.confirmEmail(email)
+
         if (!result) {
-            return res.sendStatus(500);
+            return res.sendStatus(401);
         }
         return res.status(204).send(result + " Input data is accepted. Email with confirmation code will be send to passed email address. Confirmation code should be inside link as query param, for example: https://some-front.com/confirm-registration?code=youtcodehere")
     })

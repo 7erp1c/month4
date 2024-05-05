@@ -29,8 +29,12 @@ export const UsersService = {
                 confirmationCode: uuidv4(),
                 expirationDate: add(new Date(),{hours:48}).toISOString(),//дата истечения срока
                 isConfirmed: false
+            },
+            recoveryPassword:{
+                recoveryCode: uuidv4(),
+                expirationDate: add(new Date(),{hours:48}).toISOString(),//дата истечения срока
+                isUsed: false
             }
-
         }
         const createdUser = await UsersRepository.createUser(newUser)
 
@@ -45,8 +49,8 @@ export const UsersService = {
 
     async loginUser(loginOrEmail:string, password:string):Promise<Result<createUserAccAuth| null>> {
         const user = await UsersRepository.findByLoginOrEmail(loginOrEmail)
-
-        if(!user||!user.accountData.passwordSalt) return {
+        console.log(user, "user")
+        if(!user||!user.accountData?.passwordSalt) return {
             status: ResultStatus.Unauthorized,
             errorMessage: 'User was not found by email and login',
             data: null,

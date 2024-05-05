@@ -1,13 +1,24 @@
-import {CommentView, CommentViewOutput} from "./commentsView";
+import {CommentView, CommentViewOutput, LikesInfoType} from "./commentsType";
+import {WithId} from "mongodb";
+import {NewestLikeType, PostLikeDto} from "../postsType/postsType";
 
-export const getCommentsView = (dbComments: CommentViewOutput): CommentViewOutput => {
+export const getCommentsView = (dbComments: CommentViewOutput, likes:LikesInfoType): CommentViewOutput => {
     return {
         id: dbComments.id,
         content: dbComments.content,
+        postId: dbComments.postId,
         commentatorInfo: {
             userId: dbComments.commentatorInfo.userId,
             userLogin: dbComments.commentatorInfo.userLogin
         },
-        createdAt: dbComments.createdAt
+        createdAt: dbComments.createdAt,
+        likesInfo:likes
     }
 }
+export const postLikesMapper =(like:WithId<PostLikeDto>):NewestLikeType=>{
+    return{
+        addedAt: like.addedAt,
+        userId: like.likedUserId,
+        login: like.likedUserName
+    };
+};

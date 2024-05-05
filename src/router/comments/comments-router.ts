@@ -38,27 +38,18 @@ commentsRouter
 
     .delete('/:id', authTokenMiddleware, async (req: RequestWithDelete<_delete_all_>, res) => {
         const {id} = req.params
-        console.log("ID:      " +id)
-        //проверяем на 403 If try deleted the comment that is not your own:
-        // if (!req.headers.authorization) {
-        //     return res.status(401).send('Unauthorized');
-        // }
-        // const old-token = req.headers.authorization?.split(' ')[1];
-        // const transformationId = await JwtService.getUserIdByToken(old-token);
-        // const userId = transformationId ? transformationId.toHexString() : null;
-        // const searchUser = await UsersService.findUserById(userId);
+
         const user = req.userId
-        console.log("USER:      " +user)
+
         if (!user) {
             return res.status(401).send('Unauthorized');
         }
         const idComments = await CommentsService.allComments(id)
-        console.log("idComments:      " +idComments)
+
         if (!idComments) {
             return res.sendStatus(404)
         }
-
-        if (/*!searchUser||!idComments || !idComments.commentatorInfo ||*/ user !== idComments.commentatorInfo.userId) {
+        if (user !== idComments.commentatorInfo.userId) {
             return res.sendStatus(403)
         }
         //deleted:

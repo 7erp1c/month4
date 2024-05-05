@@ -4,7 +4,7 @@
 // import {Db, MongoClient} from "mongodb";
 // import {createUserAccAuth} from "../../model/usersType/inputModelTypeUsers";
 // import {blogsView} from "../../model/blogsType/blogsView";
-// import {PostsView} from "../../model/postsType/postsView";
+// import {PostsType} from "../../model/postsType/postsView";
 // import {CommentView} from "../../model/commentsType/commentsView";
 // import {apiLogSchema, OldTokenDB, SessionsAddDB} from "../../model/authType/authType";
 // import {appConfig} from "../../setting";
@@ -63,7 +63,7 @@
 //     getCollections(){
 //         return{
 //             blogCollection:this.getDbName().collection<blogsView>("blogs"),
-//             postCollection:this.getDbName().collection<PostsView>("posts"),
+//             postCollection:this.getDbName().collection<PostsType>("posts"),
 //             usersCollection:this.getDbName().collection<createUserAccAuth>("users"),
 //             commentsCollection:this.getDbName().collection<CommentView>("comments"),
 //             refreshTokenCollection:this.getDbName().collection<OldTokenDB>("old-old-token"),

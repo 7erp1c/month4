@@ -2,6 +2,7 @@ import {body} from "express-validator";
 import {UsersService} from "../domain/users-service";
 import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
 import {BlogModel} from "../db/mongoose/models";
+import {UsersRepository} from "../repositories/usersRepository";
 
 
 export const blogsValidation = [
@@ -61,12 +62,12 @@ export const authValidation = [
 export const authEmailValidation = [
     body('email')
         .custom(async (value) => {
-            const user = await UsersQueryRepository.findUserByEmail(value)
+            const user = await UsersRepository.findByLoginOrEmail(value)
             if (!user||user.emailConfirmation?.isConfirmed) {
                 throw new Error("User not found");
             }
             return value
-        }).bail(),
+        }),
 
 ]
 export const authCodeValidation = [
@@ -82,7 +83,7 @@ export const passRecValidation =[
 ]
 export const newPasswordValid =[
     body("newPassword").trim().isString().isLength({max:20,min: 6}).bail(),
-    body("recoveryCode").trim().isString().bail()
+    body("recoveryCode").trim().notEmpty().isString().isLength({min: 30}).bail()
 ]
 
 

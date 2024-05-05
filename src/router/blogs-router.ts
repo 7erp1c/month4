@@ -13,7 +13,7 @@ import {postCreateForBlog, postsCreateAndPutModel} from "../typeForReqRes/postsC
 import {PostsService} from "../domain/posts-service";
 import {QueryBlogRequestType, SearchBlogRepositoryType, SortBlogRepositoryType} from "../model/blogsType/blogsView";
 import {BlogsQueryRepository} from "../repositoriesQuery/blogs-query-repository";
-import {ParamsId, SortPostRepositoryType} from "../model/postsType/postsView";
+import {ParamsId, SortPostRepositoryType} from "../model/postsType/postsType";
 import {PostsQueryRepository} from "../repositoriesQuery/posts-query-repository";
 
 

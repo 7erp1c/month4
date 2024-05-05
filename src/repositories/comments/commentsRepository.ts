@@ -1,8 +1,8 @@
-import {CommentView} from "../../model/commentsType/commentsView";
+import {CommentView, CommentViewInput, CommentViewOutput} from "../../model/commentsType/commentsType";
 import {CommentsModel} from "../../db/mongoose/models";
 
 export const CommentsRepositories = {
-    async createComments(newComment: CommentView): Promise<CommentView> {
+    async createComments(newComment: CommentViewOutput): Promise<CommentViewInput> {
         await CommentsModel.create(newComment)
         return newComment
     },

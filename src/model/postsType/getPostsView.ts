@@ -1,7 +1,8 @@
-import {PostsView} from "./postsView";
+import {NewestLikeType, PostLikeDto, PostOutputType, PostsLikesInfoType, PostsType} from "./postsType";
+import {WithId} from "mongodb";
 
 
-export const getPostsView = (dbPosts: PostsView): PostsView => {
+export const getPostsView = (dbPosts: PostsType,): PostsType => {
     return {
         id: dbPosts.id,
         title: dbPosts.title,
@@ -9,7 +10,7 @@ export const getPostsView = (dbPosts: PostsView): PostsView => {
         content: dbPosts.content,
         blogId: dbPosts.blogId,
         blogName: dbPosts.blogName,
-        createdAt: dbPosts.createdAt
-
+        createdAt: dbPosts.createdAt,
     }
 };
+
