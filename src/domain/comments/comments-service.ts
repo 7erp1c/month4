@@ -10,7 +10,7 @@ import {UnauthorizedError} from "express-jwt";
 
 
 export const CommentsService = {
-    async createLikeComment(commentId:string,status:LikeStatusType,userId:string){
+    async createLikeComment(commentId: string, status: LikeStatusType, userId: string) {
 
         const updateModel: CommentLikeDTO = {
             commentId: commentId,
@@ -19,10 +19,10 @@ export const CommentsService = {
         };
         await CommentsRepositories.updateCommentLike(updateModel);
     },
-    async createComments(content: string, foundPostId: string, userId: string): Promise<CommentViewOutput|null> {
+    async createComments(content: string, foundPostId: string, userId: string): Promise<CommentViewOutput | null> {
         const user = await UsersQueryRepository.findUserById(userId)
 
-        let newComment:CommentView = {
+        let newComment: CommentView = {
             id: new ObjectId().toString(),
             content: content,
             commentatorInfo: {
@@ -34,64 +34,106 @@ export const CommentsService = {
 
         }
         const createdComment = await CommentsRepositories.createComments(newComment)
-        const returnCommentWithLike = await CommentsQueryRepository.getCommentById(createdComment.id,createdComment.commentatorInfo.userId);
+        const returnCommentWithLike = await CommentsQueryRepository.getCommentById(createdComment.id, createdComment.commentatorInfo.userId);
         if (!returnCommentWithLike) return null;
         return returnCommentWithLike
-        //{
-            // id: createdComment.id,
-            // content: createdComment.content,
-            // commentatorInfo: {
-            //     userId: createdComment.commentatorInfo.userId,
-            //     userLogin: createdComment.commentatorInfo.userLogin
-            // },
-            // createdAt: createdComment.createdAt,
-            // likesInfo:{
-            //     likesCount:createdComment.likesInfo.likesCount,
-            //     dislikesCount: createdComment.likesInfo.dislikesCount,
-            //     myStatus:createdComment.likesInfo.myStatus
-            // }
-        //}
+
     },
 
     async OneCommentById(id: string) {
         return await CommentsRepositories.OneCommentsById(id);
     },
-    async getCommentWitchLikes(id: string,userId:string) {
-    //     const userId = await this.OneCommentById(id)
-    //     console.log("*****************")
-    //     console.log(userId)
-    //     if(!userId){
-    //         return null
-    // }
-        return CommentsQueryRepository.getCommentById(id,userId)
+
+    async getCommentWitchLikes(id: string, userId: string): Promise<Result<CommentViewOutput | null>> {
+        const result = await CommentsQueryRepository.getCommentById(id, userId)
+        if (!result) return {
+            status: ResultStatus.NotFound,
+            extensions: [{field: "result", message: "Comment witch likes not found"}],
+            data: null
+        }
+        return {
+            status: ResultStatus.Success,
+            data: result
+        }
     },
 
-    async deleteComments(id:string){
-        return await CommentsRepositories.deleteComments(id);
+    async deleteComments(id: string, userId: string): Promise<Result<boolean | null>> {
+
+        const findCommentId = await this.OneCommentById(id)
+
+        if (!findCommentId) return {
+            status: ResultStatus.NotFound,
+            extensions: [{field: "findCommentId", message: "Comment not found"}],
+            data: null
+        }
+        if (userId !== findCommentId.commentatorInfo.userId) return {
+            status: ResultStatus.Forbidden,
+                extensions: [{
+                field: 'user !== findCommentId.commentatorInfo.userId',
+                message: 'You are not find your comment'
+            }],
+                data: false
+        }
+        //deleted:
+        const deleteComment = await CommentsRepositories.deleteComments(id);
+        if (!deleteComment) return {
+            status: ResultStatus.NotFound,
+            extensions: [{field: "deleteComment", message: "Comment not found, not deleted"}],
+            data: null
+        }
+        return {
+            status: ResultStatus.NoContent,
+            data: true
+        }
     },
 
-    async updateComment(commentId:string,content:string){
-        return await CommentsRepositories.updateComment(commentId,content)
+    async updateComment(commentId: string, content: string, userid: string): Promise<Result<boolean | null>> {
+        const idComments = await this.OneCommentById(commentId)
+        if (!idComments) return {
+            status: ResultStatus.NotFound,
+            extensions: [{field: 'idComments', message: 'The comment was not found'}],
+            data: false
+        }
+        if (userid !== idComments.commentatorInfo.userId) return {
+            status: ResultStatus.Forbidden,
+            extensions: [{
+                field: 'user !== idComments.commentatorInfo.userId',
+                message: 'You are not updating your comment'
+            }],
+            data: false
+        }
+
+        const updateComment = await CommentsRepositories.updateComment(commentId, content)
+        if (!updateComment) return {
+            status: ResultStatus.NotFound,
+            extensions: [{field: 'idComments', message: 'The comment was not found'}],
+            data: false
+        }
+
+        return {
+            status: ResultStatus.Success,
+            data: true
+        }
     },
 
-    async removeComment(id: string, userId: string){
+    async removeComment(id: string, userId: string) {
         const comment = await CommentsRepositories.OneCommentsById(id)
 
-        if(!comment) return {
+        if (!comment) return {
             status: ResultStatus.NotFound,
             errorMessage: 'Comment not found',
             data: null,
         }
 
-        if(comment.commentatorInfo.userId !== userId) return {
+        if (comment.commentatorInfo.userId !== userId) return {
             status: ResultStatus.Forbidden,
             errorMessage: 'Comment is not in our own',
             data: null,
         }
 
-       const isDeleted =  await CommentsRepositories.deleteComments(id);
+        const isDeleted = await CommentsRepositories.deleteComments(id);
 
-        if(!isDeleted) return {
+        if (!isDeleted) return {
             status: ResultStatus.NotFound,
             errorMessage: 'Comment not found',
             data: null,

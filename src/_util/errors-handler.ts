@@ -7,7 +7,7 @@ export const newError = (message: string) => {
 	return err;
 };
 export const errorsHandler = (res: Response, err: any) => {
-	res.sendStatus(404);
+	res.status(404).send("If comment with specified id doesn't exists");
 };
 export const ERRORS = {
 	NOT_FOUND_404: "not_found",
