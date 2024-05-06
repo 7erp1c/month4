@@ -6,7 +6,6 @@ export const getCommentsView = (dbComments: CommentViewOutput, likes:LikesInfoTy
     return {
         id: dbComments.id,
         content: dbComments.content,
-        postId: dbComments.postId,
         commentatorInfo: {
             userId: dbComments.commentatorInfo.userId,
             userLogin: dbComments.commentatorInfo.userLogin

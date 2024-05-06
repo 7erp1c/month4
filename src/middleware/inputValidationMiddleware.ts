@@ -75,7 +75,10 @@ export const authCodeValidation = [
 ]
 
 export const commentValidation = [
-    body("content").trim().isString().isLength({min: 20, max: 300}).bail()
+    body("content").trim().notEmpty().isString().isLength({min: 20, max: 300}).bail()
+]
+export const commentValidationLikes = [
+    body("likeStatus").trim().isString().notEmpty().isIn(["None", "Like","Dislike"]).bail()
 ]
 
 export const passRecValidation =[

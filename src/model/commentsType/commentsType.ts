@@ -26,7 +26,7 @@ export type CommentViewInput ={
 //Output model type for comments
 export type CommentView = {
     id: string
-    postId: string
+    postId?: string
     content: string
     commentatorInfo: {
         userId: string | undefined

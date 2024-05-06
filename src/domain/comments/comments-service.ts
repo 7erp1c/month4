@@ -1,21 +1,28 @@
 import {ObjectId} from "mongodb";
 import {JwtService} from "../../application/jwt-service";
 import {CommentsRepositories} from "../../repositories/comments/commentsRepository";
-import {CommentViewOutput} from "../../model/commentsType/commentsType";
+import {CommentLikeDTO, CommentView, CommentViewOutput, LikeStatusType} from "../../model/commentsType/commentsType";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
 import {ResultStatus} from "../../_util/enum";
+import {CommentsQueryRepository} from "../../repositoriesQuery/comments-query-repository";
+import {Result} from "../../model/result.type";
+import {UnauthorizedError} from "express-jwt";
 
 
 export const CommentsService = {
-    async createComments(content: string, foundPostId: string, token: string): Promise<CommentViewOutput> {
-        const userId = await JwtService.getIdFromToken(token);
-        if(!userId){
-            throw new Error("message: CommentsService, createComments, not userId")
-        }
+    async createLikeComment(commentId:string,status:LikeStatusType,userId:string){
 
+        const updateModel: CommentLikeDTO = {
+            commentId: commentId,
+            likedUserId: userId,
+            status: status
+        };
+        await CommentsRepositories.updateCommentLike(updateModel);
+    },
+    async createComments(content: string, foundPostId: string, userId: string): Promise<CommentViewOutput|null> {
         const user = await UsersQueryRepository.findUserById(userId)
 
-        let newComment:CommentViewOutput = {
+        let newComment:CommentView = {
             id: new ObjectId().toString(),
             content: content,
             commentatorInfo: {
@@ -23,32 +30,40 @@ export const CommentsService = {
                 userLogin: user?.data?.login
             },
             createdAt: new Date().toISOString(),
-            postId: foundPostId,
-            likesInfo:{
-                likesCount:0,
-                dislikesCount:0,
-                myStatus: "None"
-            }
+            postId: foundPostId
+
         }
         const createdComment = await CommentsRepositories.createComments(newComment)
-        return {
-            id: createdComment.id,
-            content: createdComment.content,
-            commentatorInfo: {
-                userId: createdComment.commentatorInfo.userId,
-                userLogin: createdComment.commentatorInfo.userLogin
-            },
-            createdAt: createdComment.createdAt,
-            likesInfo:{
-                likesCount:createdComment.likesInfo.likesCount,
-                dislikesCount: createdComment.likesInfo.dislikesCount,
-                myStatus:createdComment.likesInfo.myStatus
-            }
-        }
+        const returnCommentWithLike = await CommentsQueryRepository.getCommentById(createdComment.id,createdComment.commentatorInfo.userId);
+        if (!returnCommentWithLike) return null;
+        return returnCommentWithLike
+        //{
+            // id: createdComment.id,
+            // content: createdComment.content,
+            // commentatorInfo: {
+            //     userId: createdComment.commentatorInfo.userId,
+            //     userLogin: createdComment.commentatorInfo.userLogin
+            // },
+            // createdAt: createdComment.createdAt,
+            // likesInfo:{
+            //     likesCount:createdComment.likesInfo.likesCount,
+            //     dislikesCount: createdComment.likesInfo.dislikesCount,
+            //     myStatus:createdComment.likesInfo.myStatus
+            // }
+        //}
     },
 
-    async allComments(id: string) {
-        return await CommentsRepositories.allComments(id);
+    async OneCommentById(id: string) {
+        return await CommentsRepositories.OneCommentsById(id);
+    },
+    async getCommentWitchLikes(id: string,userId:string) {
+    //     const userId = await this.OneCommentById(id)
+    //     console.log("*****************")
+    //     console.log(userId)
+    //     if(!userId){
+    //         return null
+    // }
+        return CommentsQueryRepository.getCommentById(id,userId)
     },
 
     async deleteComments(id:string){
@@ -60,7 +75,7 @@ export const CommentsService = {
     },
 
     async removeComment(id: string, userId: string){
-        const comment = await CommentsRepositories.allComments(id)
+        const comment = await CommentsRepositories.OneCommentsById(id)
 
         if(!comment) return {
             status: ResultStatus.NotFound,

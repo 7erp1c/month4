@@ -3,7 +3,7 @@ import {SecurityService} from "../../domain/security/security-service";
 import {RequestWithDelete} from "../../typeForReqRes/helperTypeForReq";
 import {_delete_all_, _delete_one_} from "../../typeForReqRes/blogsCreateAndPutModel";
 import {SecurityQueryRepository} from "../../repositoriesQuery/security-query-repository";
-import {authTokenMiddleware} from "../../middleware/authMiddleware/authTokenUser";
+import {authRefreshTokenMiddleware} from "../../middleware/authMiddleware/authRefreshTokenUser";
 import {authTokenMiddlewareForSessions} from "../../middleware/authMiddleware/authTokenMiddlewareForSessions";
 import {AuthService} from "../../domain/auth-service";
 import {JwtService} from "../../application/jwt-service";
@@ -11,13 +11,13 @@ import {JwtService} from "../../application/jwt-service";
 
 export const securityRouter = Router({})
 
-    .get("/devices", authTokenMiddleware, async (req: Request, res: Response) => {
+    .get("/devices", authRefreshTokenMiddleware, async (req: Request, res: Response) => {
         //
         const devices = await SecurityQueryRepository.findAllSessions(req.userId || "")
         return res.status(200).send(devices)
     })
 
-    .delete("/devices", authTokenMiddleware, async (req: Request, res: Response) => {
+    .delete("/devices", authRefreshTokenMiddleware, async (req: Request, res: Response) => {
         const result = await SecurityService.deleteDevicesSessions(req.userId ?? "",req.cookies.refreshToken)
         if (!result) {
             res.sendStatus(401)

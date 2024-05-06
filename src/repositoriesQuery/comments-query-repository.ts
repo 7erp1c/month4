@@ -6,12 +6,13 @@ import {
 } from "../model/commentsType/commentsType";
 import {getCommentsView} from "../model/commentsType/getCommentsView";
 import {CommentLikeModel, CommentsModel, PostLikeModel, PostModel} from "../db/mongoose/models";
+import {CommentsRepositories} from "../repositories/comments/commentsRepository";
 
 
 
 export const CommentsQueryRepository = {
 
-    async getAllCommentsWithPosts(sortData: SortCommentsRepositoryType, postId?: string,userId?:string): Promise<CommentsViewModelType> {
+    async getAllCommentsWithPost(sortData: SortCommentsRepositoryType, postId?: string, userId?:string): Promise<CommentsViewModelType> {
         let searchKey = {}
         let sortKey = {};
         let sortDirection: number;
@@ -66,6 +67,17 @@ export const CommentsQueryRepository = {
             }
             return getPostsView(post);
         } catch (err) {
+            return null;
+        }
+    },
+    async getCommentById(commentId: string, userId?:string) {
+        try {
+            const comment = await CommentsModel.findOne({id: commentId});
+            const likes:LikesInfoType = await this.getLikes(commentId, userId);
+
+            if (comment) return getCommentsView(comment, likes);
+            else return null;
+        }catch (err){
             return null;
         }
     },

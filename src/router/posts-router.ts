@@ -18,17 +18,17 @@ import {errorsValidation} from "../middleware/errorsValidation";
 import {QueryBlogRequestType} from "../model/blogsType/blogsView";
 import {QueryPostRequestType, SortPostRepositoryType} from "../model/postsType/postsType";
 import {PostsQueryRepository} from "../repositoriesQuery/posts-query-repository";
-import {authTokenMiddleware} from "../middleware/authMiddleware/authTokenUser";
+import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
 import {CommentsService} from "../domain/comments/comments-service";
 import {CommentsQueryRepository} from "../repositoriesQuery/comments-query-repository";
 import {QueryCommentsRequestType, SortCommentsRepositoryType} from "../model/commentsType/commentsType";
 import {paginatorValidator} from "../middleware/sortingAndPaginationMiddleware";
-import {softAuthentificationMiddleware} from "../middleware/postMiddelware/softAuthentificationMiddleware";
+import { authTokenMiddelware} from "../middleware/postMiddelware/aurhTokenMiddelware";
 
 
 export const postsRouter = Router({})
 postsRouter
-    .get('/:postId/comments',softAuthentificationMiddleware,paginatorValidator,errorsValidation, async (req: Request, res: Response) => {
+    .get('/:postId/comments',authTokenMiddelware,paginatorValidator,errorsValidation, async (req: Request, res: Response) => {
         const {postId} = req.params
         const query: QueryCommentsRequestType = req.query
         if(!req.userId) return res.sendStatus(401)
@@ -41,7 +41,7 @@ postsRouter
         }
 
         const comments = await CommentsQueryRepository
-            .getAllCommentsWithPosts(sortData, postId,req.userId);
+            .getAllCommentsWithPost(sortData, postId,req.userId);
         const posts = await CommentsQueryRepository.getPostById(postId);
         if (!posts) {
             res.sendStatus(404); // Возвращаем статус 404, если blogId не найден
@@ -50,14 +50,11 @@ postsRouter
         return res.status(200).json(comments);
 
     })
-    .post('/:postId/comments', authTokenMiddleware,commentValidation,errorsValidation, async (req: RequestWithPut<postIdForComments, commentCreateContent>, res: Response) => {
+    .post('/:postId/comments', authTokenMiddelware,commentValidation,errorsValidation, async (req: RequestWithPut<postIdForComments, commentCreateContent>, res: Response) => {
         const {content} = req.body
         const {postId} = req.params
+        if(!req.userId) return res.sendStatus(401)
 
-        if (!req.headers.authorization) {
-            return res.status(401).send('Unauthorized');
-        }
-        const token = req.headers.authorization.split(' ')[1];
         const foundPostsFromRep = await PostsService.findPostsByID(postId)
         if (!foundPostsFromRep) {
             return res.sendStatus(404)
@@ -67,12 +64,12 @@ postsRouter
             return res.sendStatus(404)
         }
 
-        const newComment = await CommentsService.createComments(content, foundPostId, token)
+        const newComment = await CommentsService.createComments(content, foundPostId, req.userId)
         return res.status(201).send(newComment)
 
     })
 
-    .get('/',softAuthentificationMiddleware, async (req: RequestWithBlogsPOST<QueryPostRequestType>, res: Response) => {
+    .get('/',authTokenMiddelware, async (req: RequestWithBlogsPOST<QueryPostRequestType>, res: Response) => {
         const query: QueryBlogRequestType = req.query
         const sortData: SortPostRepositoryType = {
             sortBy: query.sortBy || "createdAt",

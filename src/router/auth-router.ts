@@ -3,7 +3,7 @@ import {UsersService} from "../domain/users-service";
 import {authInput} from "../model/authType/authType";
 import {RequestWithUsers} from "../typeForReqRes/helperTypeForReq";
 import {JwtService} from "../application/jwt-service";
-import {authTokenMiddleware} from "../middleware/authMiddleware/authTokenUser";
+
 import {
     authCodeValidation,
     authEmailValidation,
@@ -14,17 +14,17 @@ import {errorsValidation} from "../middleware/errorsValidation";
 import {AuthService} from "../domain/auth-service";
 import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
 import {ResultStatus} from "../_util/enum";
-import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
+
 import {authTokenLogoutMiddleware} from "../middleware/authMiddleware/authLogoutUser";
 import {delay} from "../__tests__/e2e/utils/timer";
 import {addTokenInCookie} from "../managers/token-add-cookie";
 import {EmailsManager} from "../managers/email-manager";
+import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
 
 
 export const authRouter = Router({})
 authRouter
     .post('/login', authValidation, errorsValidation, async (req: RequestWithUsers<authInput>, res: Response) => {
-        //if (!req.body || !req.ip) return res.status(401).send("not body")
         const {loginOrEmail, password} = req.body
         const ip = req.ip || "unknown"
         const userAgent = req.headers['user-agent'] || "unknown";
@@ -118,7 +118,7 @@ authRouter
         return res.sendStatus(204);
     })
 
-    .get('/me', authTokenMiddleware, async (req: Request, res: Response) => {
+    .get('/me', authRefreshTokenMiddleware, async (req: Request, res: Response) => {
         if (!req.userId) return res.status(401).send('Unauthorized')
         const user = await UsersQueryRepository.findUserById(req.userId);
         if (!user.data || user.status === ResultStatus.Unauthorized) return res.sendStatus(401)

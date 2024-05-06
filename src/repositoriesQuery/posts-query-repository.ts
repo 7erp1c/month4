@@ -5,7 +5,7 @@ import {
     PostsViewModelType,
     SortPostRepositoryType
 } from "../model/postsType/postsType";
-import {getPostsView, postLikesMapper} from "../model/postsType/getPostsView";
+import {getPostsView} from "../model/postsType/getPostsView";
 //import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
 import {PostLikeModel, PostModel} from "../db/mongoose/models";
 

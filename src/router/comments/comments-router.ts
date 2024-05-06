@@ -1,25 +1,41 @@
 import {Request, Response, Router} from "express";
-import {authTokenMiddleware} from "../../middleware/authMiddleware/authTokenUser";
+import {authRefreshTokenMiddleware} from "../../middleware/authMiddleware/authRefreshTokenUser";
 import {CommentsService} from "../../domain/comments/comments-service";
 import {RequestWithDelete} from "../../typeForReqRes/helperTypeForReq";
 import {_delete_all_} from "../../typeForReqRes/blogsCreateAndPutModel";
-import {commentValidation} from "../../middleware/inputValidationMiddleware";
+import {commentValidation, commentValidationLikes} from "../../middleware/inputValidationMiddleware";
 import {errorsValidation} from "../../middleware/errorsValidation";
+import {authTokenMiddelware} from "../../middleware/postMiddelware/aurhTokenMiddelware";
+import {Result} from "../../model/result.type";
+import {errorsHandler} from "../../_util/errors-handler";
+import {getCommentTokenMiddelware} from "../../middleware/commentsMiddelware/getCommentAllLikes";
 
 
 export const commentsRouter = Router({})
 
 commentsRouter
-    .put('/:commentId', authTokenMiddleware,commentValidation,errorsValidation, async (req: Request, res: Response) => {
+    .put('/:commentId/like-status', authTokenMiddelware, commentValidationLikes, errorsValidation, async (req: Request, res: Response) => {
+        try {
         const {commentId} = req.params
-        const { content} = req.body
+        const {likeStatus} = req.body
+        const userId = req.userId!
+
+            const createLikeComment = await CommentsService.createLikeComment(commentId, likeStatus, userId)
+            res.sendStatus(204)
+        } catch (err) {
+            errorsHandler(res, err);
+        }
+
+
+    })
+    .put('/:commentId', authTokenMiddelware, commentValidation, errorsValidation, async (req: Request, res: Response) => {
+        const {commentId} = req.params
+        const {content} = req.body
         const user = req.userId
-        console.log("user   "+user)
         if (!user) {
             return res.status(401).send('Unauthorized');
         }
-        const idComments = await CommentsService.allComments(commentId)
-        console.log("idComments   "+idComments)
+        const idComments = await CommentsService.OneCommentById(commentId)
         if (!idComments) {
             return res.sendStatus(404)
         }
@@ -28,7 +44,7 @@ commentsRouter
         }
 
         const updateComment = await CommentsService.updateComment(commentId, content)
-        console.log("updateComment   "+updateComment)
+        console.log("updateComment   " + updateComment)
         if (!updateComment) {
             res.sendStatus(404)
             return
@@ -36,7 +52,7 @@ commentsRouter
         return res.sendStatus(204)
     })
 
-    .delete('/:id', authTokenMiddleware, async (req: RequestWithDelete<_delete_all_>, res) => {
+    .delete('/:id', authRefreshTokenMiddleware, async (req: RequestWithDelete<_delete_all_>, res) => {
         const {id} = req.params
 
         const user = req.userId
@@ -44,7 +60,7 @@ commentsRouter
         if (!user) {
             return res.status(401).send('Unauthorized');
         }
-        const idComments = await CommentsService.allComments(id)
+        const idComments = await CommentsService.OneCommentById(id)
 
         if (!idComments) {
             return res.sendStatus(404)
@@ -67,10 +83,10 @@ commentsRouter
 //         if(result.status === ResultStatuses.Forbbiden) return res.status(403).send(result.errorMessage!)
     })
 
-    .get('/:id', async (req, res) => {
+    .get('/:id',getCommentTokenMiddelware,async (req, res) => {
         const {id} = req.params
-        const users = await CommentsService.allComments(id)
-        if(!users){
+        const users = await CommentsService.getCommentWitchLikes(id,req.userId!)
+        if (!users) {
             return res.sendStatus(404)
         }
         return res.status(200).send(users)
