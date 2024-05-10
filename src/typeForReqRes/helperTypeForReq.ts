@@ -10,7 +10,8 @@ export type RequestWithDelete<T> = Request<T>
 export type RequestWithPut<T,B> = Request<T,{},B>
 //Users
 export type RequestWithUsers<T> = Request<{},{},T>
-
+//Posts
+export type RequestPostsComments<T,B> = Request<T,{},{},B>
 //comments
 export type RequestCommentsPut<T,B> = Request<T,{},B,{}>
 export type RequestCommentsGet<T> = Request<T>

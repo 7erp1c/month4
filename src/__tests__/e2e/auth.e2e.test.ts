@@ -17,6 +17,7 @@ import mongoose from "mongoose";
 import {RefreshTokenModel, UserModel} from "../../db/mongoose/models";
 import {UsersRepository} from "../../repositories/usersRepository";
 import {body} from "express-validator";
+import {usersRepository} from "../../composition-root";
 
 
 const routerName = '/auth/'
@@ -94,7 +95,7 @@ describe("AuthTest", () => {
             console.log(registration.body)
             const email = "ul_tray2@bk.ru"
 
-            const user = (await UsersRepository.findByLoginOrEmail(email))
+            const user = (await usersRepository.findByLoginOrEmail(email))
             firstCode2 = user?.emailConfirmation?.confirmationCode
             console.log("FIRST CODE " + firstCode2)
 
@@ -108,7 +109,7 @@ describe("AuthTest", () => {
                 })
                 .expect(204)
             const email = "ul_tray@bk.ru"
-            const userAfterResend = (await UsersRepository.findByLoginOrEmail(email))
+            const userAfterResend = (await usersRepository.findByLoginOrEmail(email))
             secondCode = userAfterResend?.emailConfirmation?.confirmationCode
             expect(firstCode).not.toEqual(secondCode)
 

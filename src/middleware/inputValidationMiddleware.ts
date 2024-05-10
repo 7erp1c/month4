@@ -3,6 +3,7 @@ import {UsersService} from "../domain/users-service";
 import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
 import {BlogModel} from "../db/mongoose/models";
 import {UsersRepository} from "../repositories/usersRepository";
+import {usersQueryRepository, usersRepository, usersService} from "../composition-root";
 
 
 export const blogsValidation = [
@@ -35,7 +36,7 @@ export const blogPostValidation = [
 ]
 export const usersValidation = [
     body('login').trim().isString().isLength({min: 3, max: 10}).custom(async (value) => {
-        const findUserByLogin = await UsersService.findUserByLogin(value)
+        const findUserByLogin = await usersService.findUserByLogin(value)
         if (!findUserByLogin) {
             return value
         }
@@ -45,7 +46,7 @@ export const usersValidation = [
     body('email').trim().isString()
         .matches(new RegExp("^[\\w\\.\\-]+@[\\w\\.\\-]+\\.[a-zA-Z]{2,4}$"))
         .custom(async (value) => {
-            const findUserByEmail = await UsersQueryRepository.findUserByEmail(value)
+            const findUserByEmail = await usersQueryRepository.findUserByEmail(value)
             if (!findUserByEmail) {
                 return value
             }
@@ -62,7 +63,7 @@ export const authValidation = [
 export const authEmailValidation = [
     body('email')
         .custom(async (value) => {
-            const user = await UsersRepository.findByLoginOrEmail(value)
+            const user = await usersRepository.findByLoginOrEmail(value)
             if (!user||user.emailConfirmation?.isConfirmed) {
                 throw new Error("User not found");
             }

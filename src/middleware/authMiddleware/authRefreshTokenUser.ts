@@ -1,6 +1,7 @@
 import {Request, Response, NextFunction} from "express";
 import {JwtService} from "../../application/jwt-service";
 import {Result} from "../../model/result.type";
+import {jwtService} from "../../composition-root";
 
 
 
@@ -13,7 +14,7 @@ export const authRefreshTokenMiddleware = async (req: Request, res: Response, ne
         return
     }
 
-    const userId = await JwtService.getIdFromToken(refreshToken)
+    const userId = await jwtService.getIdFromToken(refreshToken)
     // console.log("userId: "+ userId)
     if (userId) {
         req.userId = userId

@@ -1,8 +1,9 @@
 import {NextFunction, Request, Response} from "express";
 import {JwtService} from "../../application/jwt-service";
-import {RefreshTokenRepository} from "../../repositories/old-token/refreshTokenRepository";
+import {RefreshTokenRepository} from "../../repositories/refreshTokenRepository";
 
 import {SecurityService} from "../../domain/security/security-service";
+import {jwtService, refreshTokenRepository, securityService} from "../../composition-root";
 
 
 export const authTokenLogoutMiddleware = async (req: Request, res: Response, next: NextFunction) => {
@@ -10,28 +11,28 @@ export const authTokenLogoutMiddleware = async (req: Request, res: Response, nex
     if (!refreshToken) {
         return res.status(401).send('JWT refreshToken is missing');
     }
-    const findRefreshToken = await RefreshTokenRepository.checkToken(refreshToken)
+    const findRefreshToken = await refreshTokenRepository.checkToken(refreshToken)
     if (!findRefreshToken) {//если  token не найден в DB
         return res.status(401).send('JWT refreshToken is missing 2');
     }
     //проверяем есть ли сессия
-    const searchSession = await SecurityService.searchSession(refreshToken)
+    const searchSession = await securityService.searchSession(refreshToken)
     if(!searchSession){
         return res.status(401).send('Session not found')
     }
     //проверяем токен протух, id и т.д.
-    const userId = await JwtService.getIdFromToken(refreshToken)//проверяем токен
+    const userId = await jwtService.getIdFromToken(refreshToken)//проверяем токен
     if (!userId) {
-        const upTokenValid = await RefreshTokenRepository.updateRefreshValid(refreshToken)
+        const upTokenValid = await refreshTokenRepository.updateRefreshValid(refreshToken)
         return res.status(401).send('Unauthorized 1');
     }
     //проверяем статус в DB
-    const refreshTokenStatusValid = await RefreshTokenRepository.invalidateToken(refreshToken)
+    const refreshTokenStatusValid = await refreshTokenRepository.invalidateToken(refreshToken)
     if (!refreshTokenStatusValid) {
         return res.status(401).send('the token is invalid')
     }
 
-    const cleanDb = await SecurityService.clean(refreshToken)
+    const cleanDb = await securityService.clean(refreshToken)
     if(!cleanDb){
         return res.status(401).send('the token is invalid 2')
     }

@@ -1,4 +1,5 @@
 import exp from "node:constants";
+import {QueryCommentsRequestType, SortCommentsRepositoryType} from "../model/commentsType/commentsType";
 
 export type postsCreateAndPutModel = {
     title: string,
@@ -19,3 +20,4 @@ export type commentCreateContent = {
 export type postIdForComments = {
     postId: string
 }
+

@@ -1,8 +1,9 @@
-import {SessionsAddDB} from "../../model/authType/authType";
-import {JwtService} from "../../application/jwt-service";
-import {ApiRequestModel, SecurityModel} from "../../db/mongoose/models";
+import {SessionsAddDB} from "../model/authType/authType";
+import {JwtService} from "../application/jwt-service";
+import {ApiRequestModel, SecurityModel} from "../db/mongoose/models";
+import {jwtService} from "../composition-root";
 
-export const securityRepository = {
+export class SecurityRepository  {
 
     async saveRequestInformation(ip: string, url: string) {
         const result = await ApiRequestModel.create({
@@ -10,7 +11,7 @@ export const securityRepository = {
             URL: url,
             date: new Date()
         });
-    },
+    }
     async countRequestByTime(ip: string, url: string, interval: number) {
 
         const timeCheck = (new Date(Date.now() - (1000 * interval)));
@@ -23,14 +24,14 @@ export const securityRepository = {
 
         };
         return  ApiRequestModel.countDocuments(searchKey);
-    },
+    }
     //закидываем сессию в db
     async createNewSession(newSession: SessionsAddDB) {
         await SecurityModel.create(newSession)
-    },
+    }
     //удаляем все сессии User кроме актуальной, протуханим токены User, кроме актуального
     async deleteDevicesSessions(userId: string, token: string) {
-        const decode = await JwtService.decodeRefreshToken(token)
+        const decode = await jwtService.decodeRefreshToken(token)
         const deviceId = decode?.deviceId
         // Получаем все сессии для данного пользователя
         const userDevices = await SecurityModel.find({userId}).lean();
@@ -50,14 +51,14 @@ export const securityRepository = {
                     .updateMany({userId, deviceId: status.deviceId}, {$set: {isValid: false}});
             }
         }
-    },
+    }
     //удаляем по deviceId
     async deleteDevicesSessionsById(id: string): Promise<boolean> {
         const result = await SecurityModel.deleteOne({deviceId: id})
         return result.deletedCount === 1
-    },
+    }
     async updateDataToken(token: string): Promise<boolean> {
-        const decode = await JwtService.decodeRefreshToken(token)
+        const decode = await jwtService.decodeRefreshToken(token)
         const decodeIat = Number(decode?.iat)
         const decodeExp = Number(decode?.exp)
         const iatIsoString = new Date(decodeIat * 1000).toISOString();
@@ -71,7 +72,7 @@ export const securityRepository = {
                 }
             })
         return result.matchedCount === 1
-    },
+    }
 
 
 }

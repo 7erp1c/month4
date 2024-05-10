@@ -1,7 +1,5 @@
 import {Request, Response, NextFunction} from "express";
-import {JwtService} from "../../application/jwt-service";
-import {Result} from "../../model/result.type";
-import {SecurityQueryRepository} from "../../repositoriesQuery/security-query-repository";
+import {jwtService, securityQueryRepository} from "../../composition-root";
 
 
 export const authTokenMiddlewareForSessions = async (req: Request, res: Response, next: NextFunction) => {
@@ -11,29 +9,23 @@ export const authTokenMiddlewareForSessions = async (req: Request, res: Response
         return res.sendStatus(401)
     }
     //getting the id from the token, протух
-    const userId = await JwtService.getIdFromToken(refreshToken)
+    const userId = await jwtService.getIdFromToken(refreshToken)
     if (!userId) {
         return res.sendStatus(401)
     }
 
     //getting the id from the sessions
-    const findSessionsByDeviceId = await SecurityQueryRepository.findSessionByDeviceId(req.params.deviceId)
+    const findSessionsByDeviceId = await securityQueryRepository.findSessionByDeviceId(req.params.deviceId)
     console.log("___________findUserIdAndDeviceId  " + findSessionsByDeviceId)
     //if not session
-    if (!findSessionsByDeviceId) {
-        return res.sendStatus(404)
-    }
+    if (!findSessionsByDeviceId) return res.sendStatus(404)
     // If try to delete the deviceId of other user
-    const findUserIdInSessions = await SecurityQueryRepository.userSessionSearch(req.params.deviceId, refreshToken)
-    if (!findUserIdInSessions) {
-        return res.sendStatus(403)
-    }     //_____
-
+    const findUserIdInSessions = await securityQueryRepository.userSessionSearch(req.params.deviceId, refreshToken)
+    if (!findUserIdInSessions) return res.sendStatus(403)
     if (userId) {
         req.userId = userId
         return next()
     }
     // If the JWT refreshToken inside cookie is missing, expired or incorrect
-    return res.send(401)                                                //_____
-
+    return res.sendStatus(401)
 }

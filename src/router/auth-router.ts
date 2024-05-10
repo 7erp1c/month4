@@ -20,109 +20,28 @@ import {delay} from "../__tests__/e2e/utils/timer";
 import {addTokenInCookie} from "../managers/token-add-cookie";
 import {EmailsManager} from "../managers/email-manager";
 import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
+import {errorsHandler400, errorsHandler404} from "../_util/errors-handler";
+import {AuthController} from "./controllers/auth-controller";
+import {authController} from "../composition-root";
 
 
 export const authRouter = Router({})
 authRouter
-    .post('/login', authValidation, errorsValidation, async (req: RequestWithUsers<authInput>, res: Response) => {
-        const {loginOrEmail, password} = req.body
-        const ip = req.ip || "unknown"
-        const userAgent = req.headers['user-agent'] || "unknown";
-        //login, create token, create session, add data token  in db
-        const loginUser = await AuthService.login(loginOrEmail, password, userAgent, ip)
-        if (loginUser.status === ResultStatus.Unauthorized) return res.sendStatus(401)
-        //закидываем токен в cookie (module в managers)
-        addTokenInCookie(res, loginUser.data!.refresh)
-
-        return res.status(200).send({
-            accessToken: loginUser.data!.access
-        })
-
-    })
-
-    .post("/password-recovery", passRecValidation, errorsValidation, async (req: Request, res: Response) => {
-        const {email} = req.body
-        await AuthService.sendRecoveryCode(email)
-        return res.status(204).send("Even if current email is not registered (for prevent user's email detection)")
-    })
-
-    .post("/new-password", newPasswordValid, errorsValidation, async (req: Request, res: Response) => {
-        const {newPassword, recoveryCode} = req.body
-        const updatePassword = await AuthService.updatePassword(newPassword, recoveryCode)
-        if(!updatePassword.status) return res.status(401).send(updatePassword.message)
-        return res.status(204).send("If code is valid and new password is accepted")
-    })
-
-    .post('/refresh-token', authRefreshTokenMiddleware, async (req: Request, res: Response) => {
-        const {refreshToken} = req.cookies
-        if (!req.userId || !refreshToken) return res.sendStatus(401)
-        //the delay is so that the tokens are not the same
-        await delay(200)
-        const twoToken = await JwtService.tokenUpdate(req.userId, refreshToken)
-        if (!twoToken.data || twoToken.status === ResultStatus.Unauthorized) return res.sendStatus(401)
-
-        addTokenInCookie(res, twoToken.data.refresh)
-        return res.status(200).send({
-            accessToken: twoToken.data.refresh
-        })
-
-    })
-
-    //регистрация и подтверждение
-    .post('/registration-confirmation', authCodeValidation, errorsValidation, async (req: Request, res: Response) => {
-        const {code} = req.body
-        const result = await AuthService.confirmCode(code)
-
-        if (!result.status) {
-            res.status(400).json({
-                errorsMessages: [
-                    {
-                        message: "Invalid code or expiration date expired",
-                        field: "code"
-                    }]
-            });
-            return;
-        }
-        return res.status(204).send(result + " Email was verified. Account was activated")
-    })
-
-    .post('/registration', usersValidation, errorsValidation, async (req: Request, res: Response) => {
-
-        const {login, email, password} = req.body
-        const user = await AuthService.createUser(login, password, email)
-        if (!user) {
-            return res.sendStatus(400)
-        }
-
-        return res.status(204).json({
-            user,
-            message: 'Input data is accepted. Email with confirmation code will be sent to the provided email address.'
-        });
-
-    })
-
+    //Логиним User и получаем пару токенов
+    .post('/login', authValidation, errorsValidation, authController.LoginUser.bind(authController))
+    //письмо на почту с кодом для обновления пароля
+    .post("/password-recovery", passRecValidation, errorsValidation, authController.passwordRecovery.bind(authController))
+    //обновляем пароль
+    .post("/new-password", newPasswordValid, errorsValidation, authController.newUserPassword.bind(authController))
+    //получаем новую пару токенов
+    .post('/refresh-token', authRefreshTokenMiddleware, authController.refreshToken.bind(authController))
+    //отправка письма с кодом подтверждения
+    .post('/registration-confirmation', authCodeValidation, errorsValidation, authController.registrationConfirmation.bind(authController))
+    //создаем и регистрируем User
+    .post('/registration', usersValidation, errorsValidation, authController.RegistrationUser.bind(authController))
     //повторная отправка email
-    .post('/registration-email-resending', async (req: Request, res: Response) => {
-        const {email} = req.body
-        const result = await AuthService.confirmEmail(email)
-
-        if (!result) {
-            return res.sendStatus(401);
-        }
-        return res.status(204).send(result + " Input data is accepted. Email with confirmation code will be send to passed email address. Confirmation code should be inside link as query param, for example: https://some-front.com/confirm-registration?code=youtcodehere")
-    })
-
+    .post('/registration-email-resending', authController.registrationEmailResending.bind(authController))
     //выход и отчистка TokenDB
-    .post("/logout", authTokenLogoutMiddleware, async (req: Request, res: Response) => {
-
-        return res.sendStatus(204);
-    })
-
-    .get('/me', authRefreshTokenMiddleware, async (req: Request, res: Response) => {
-        if (!req.userId) return res.status(401).send('Unauthorized')
-        const user = await UsersQueryRepository.findUserById(req.userId);
-        if (!user.data || user.status === ResultStatus.Unauthorized) return res.sendStatus(401)
-
-        return res.status(200).send(user.data);
-
-    })
+    .post("/logout", authTokenLogoutMiddleware, authController.logoutUser.bind(authController))
+    //получаем инфо о узере
+    .get('/me', authRefreshTokenMiddleware, authController.getInfoUser.bind(authController))

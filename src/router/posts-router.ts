@@ -1,15 +1,12 @@
 import {Request, Response, Router} from "express";
 import {
+    RequestPostsComments,
     RequestWithBlogsPOST,
     RequestWithDelete,
     RequestWithPostsPOST,
     RequestWithPut
 } from "../typeForReqRes/helperTypeForReq";
-import {
-    commentCreateContent,
-    postIdForComments,
-    postsCreateAndPutModel
-} from "../typeForReqRes/postsCreateAndPutModel";
+import {commentCreateContent, postIdForComments, postsCreateAndPutModel} from "../typeForReqRes/postsCreateAndPutModel";
 import {_delete_all_} from "../typeForReqRes/blogsCreateAndPutModel";
 import {PostsService} from "../domain/posts-service";
 import {authGuardMiddleware} from "../middleware/authGuardMiddleware";
@@ -18,58 +15,45 @@ import {errorsValidation} from "../middleware/errorsValidation";
 import {QueryBlogRequestType} from "../model/blogsType/blogsView";
 import {QueryPostRequestType, SortPostRepositoryType} from "../model/postsType/postsType";
 import {PostsQueryRepository} from "../repositoriesQuery/posts-query-repository";
-import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
 import {CommentsService} from "../domain/comments/comments-service";
 import {CommentsQueryRepository} from "../repositoriesQuery/comments-query-repository";
-import {QueryCommentsRequestType, SortCommentsRepositoryType} from "../model/commentsType/commentsType";
+import {SortCommentsRepositoryType} from "../model/commentsType/commentsType";
 import {paginatorValidator} from "../middleware/sortingAndPaginationMiddleware";
-import { authTokenMiddelware} from "../middleware/postMiddelware/aurhTokenMiddelware";
+import {authTokenMiddelware} from "../middleware/postMiddelware/aurhTokenMiddelware";
+import {errorsHandler404} from "../_util/errors-handler";
+import {ResultStatus} from "../_util/enum";
+
 
 
 export const postsRouter = Router({})
 postsRouter
-    .get('/:postId/comments',authTokenMiddelware,paginatorValidator,errorsValidation, async (req: Request, res: Response) => {
-        const {postId} = req.params
-        const query: QueryCommentsRequestType = req.query
-        if(!req.userId) return res.sendStatus(401)
+    .get('/:postId/comments', authTokenMiddelware, paginatorValidator, errorsValidation,
+        async (req: RequestPostsComments<postIdForComments, any>, res: Response) => {
+            try {
+                const sortData: SortCommentsRepositoryType = {
+                    sortBy: req.query.sortBy || "createdAt",
+                    sortDirection: req.query.sortDirection || "desc",
+                    pageNumber: req.query.pageNumber || 1,
+                    pageSize: req.query.pageSize || 10
+                }
+                const comments = await CommentsQueryRepository
+                    .getAllCommentsWithPost(sortData, req.params.postId, req.userId!);
+                return res.status(200).json(comments);
+            } catch (err) {
+                errorsHandler404(res, err);
+                return
+            }
 
-        const sortData: SortCommentsRepositoryType = {
-            sortBy: query.sortBy || "createdAt",
-            sortDirection: query.sortDirection || "desc",
-            pageNumber: query.pageNumber || 1,
-            pageSize: query.pageSize || 10
-        }
 
-        const comments = await CommentsQueryRepository
-            .getAllCommentsWithPost(sortData, postId,req.userId);
-        const posts = await CommentsQueryRepository.getPostById(postId);
-        if (!posts) {
-            res.sendStatus(404); // Возвращаем статус 404, если blogId не найден
-            return;
-        }
-        return res.status(200).json(comments);
+        })
+    .post('/:postId/comments', authTokenMiddelware, commentValidation, errorsValidation,
+        async (req: RequestWithPut<postIdForComments, commentCreateContent>, res: Response) => {
+            const newComment = await CommentsService.createComments(req.body.content, req.params.postId, req.userId!)
+            if (newComment.status === ResultStatus.NotFound) return res.status(404).send(newComment.extensions)
+            return res.status(201).send(newComment.data)
+        })
 
-    })
-    .post('/:postId/comments', authTokenMiddelware,commentValidation,errorsValidation, async (req: RequestWithPut<postIdForComments, commentCreateContent>, res: Response) => {
-        const {content} = req.body
-        const {postId} = req.params
-        if(!req.userId) return res.sendStatus(401)
-
-        const foundPostsFromRep = await PostsService.findPostsByID(postId)
-        if (!foundPostsFromRep) {
-            return res.sendStatus(404)
-        }
-        const foundPostId = foundPostsFromRep.id
-        if (!foundPostId) {
-            return res.sendStatus(404)
-        }
-
-        const newComment = await CommentsService.createComments(content, foundPostId, req.userId)
-        return res.status(201).send(newComment)
-
-    })
-
-    .get('/',authTokenMiddelware, async (req: RequestWithBlogsPOST<QueryPostRequestType>, res: Response) => {
+    .get('/', authTokenMiddelware, async (req: RequestWithBlogsPOST<QueryPostRequestType>, res: Response) => {
         const query: QueryBlogRequestType = req.query
         const sortData: SortPostRepositoryType = {
             sortBy: query.sortBy || "createdAt",
@@ -77,12 +61,12 @@ postsRouter
             pageNumber: query.pageNumber || 1,
             pageSize: query.pageSize || 10
         }
-
         const posts = await PostsQueryRepository.getAllPosts(sortData,);
         res.status(200).json(posts);
     })
 
-    .post('/', authGuardMiddleware, postsValidation, errorsValidation, async (req: RequestWithPostsPOST<postsCreateAndPutModel>, res: Response) => {
+    .post('/', authGuardMiddleware, postsValidation, errorsValidation,
+        async (req: RequestWithPostsPOST<postsCreateAndPutModel>, res: Response) => {
         const newPostsFromRep = await PostsService
             .createPosts(req.body.title, req.body.shortDescription, req.body.content, req.body.blogId)//как сократить
 
@@ -101,10 +85,11 @@ postsRouter
         }
     })
 
-    .put('/:id', authGuardMiddleware, postsValidation, errorsValidation, async (req: Request, res: Response) => {
+    .put('/:id', authGuardMiddleware, postsValidation, errorsValidation,
+        async (req: Request, res: Response) => {
         const rB = req.body
-        const isUpdatePosts = await PostsService.updatePosts(req.params.id, rB.title, rB.shortDescription, rB.content, rB.blogId)
-
+        const isUpdatePosts = await PostsService
+            .updatePosts(req.params.id, rB.title, rB.shortDescription, rB.content, rB.blogId)
         if (isUpdatePosts) {
             res.status(204).send()
             return
@@ -117,7 +102,6 @@ postsRouter
     })
 
     .delete('/:id', authGuardMiddleware, async (req: RequestWithDelete<_delete_all_>, res: Response) => {
-
         const isDelete = await PostsService.deletePosts(req.params.id)
         if (isDelete) {
             res.sendStatus(204)//Not Found

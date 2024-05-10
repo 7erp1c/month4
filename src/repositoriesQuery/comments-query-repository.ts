@@ -6,7 +6,7 @@ import {
 } from "../model/commentsType/commentsType";
 import {getCommentsView} from "../model/commentsType/getCommentsView";
 import {CommentLikeModel, CommentsModel, PostLikeModel, PostModel} from "../db/mongoose/models";
-import {CommentsRepositories} from "../repositories/comments/commentsRepository";
+import {CommentsRepositories} from "../repositories/commentsRepository";
 
 
 

@@ -1,6 +1,6 @@
 import {NextFunction, Request, Response} from "express";
-import { securityRepository} from "../../repositories/api/securityRepository";
 import {settings} from "../../setting";
+import {securityRepository} from "../../composition-root";
 
 
 export const apiReqLimitMiddleware  = async (req: Request, res: Response, next: NextFunction) => {

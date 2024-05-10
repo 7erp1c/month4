@@ -2,11 +2,13 @@ import {EmailAdapter} from "../adapters/email-adapter";
 
 
 
-export const EmailsManager = {
+export class EmailsManager  {
+     constructor(protected emailAdapter:EmailAdapter) {}
     async sendMessageWitchConfirmationCode(email: string, login: string, code: string) {
-//отправку сообщения лучше обернуть в try-catch, чтобы при ошибке(например отвалиться отправка) приложение не падало
+        //отправку сообщения лучше обернуть в try-catch,
+        //чтобы при ошибке(например отвалиться отправка) приложение не падало
         try {
-            await EmailAdapter.sendEmail(//отправить сообщение на почту юзера с кодом подтверждения
+            await this.emailAdapter.sendEmail(//отправить сообщение на почту юзера с кодом подтверждения
                 email,
                 login,
                 code
@@ -17,12 +19,13 @@ export const EmailsManager = {
         }
         return true
 
-    },
+    }
 
-    async EmailsManagerRecovery(email: string, code:string) {
-      //отправку сообщения лучше обернуть в try-catch, чтобы при ошибке(например отвалиться отправка) приложение не падало
+    async emailsManagerRecovery(email: string, code:string) {
+        //отправку сообщения лучше обернуть в try-catch,
+        // чтобы при ошибке(например отвалиться отправка) приложение не падало
         try {
-            await EmailAdapter.sendCodeRecoveryOnEmail(//отправить сообщение на почту юзера с кодом подтверждения
+            await this.emailAdapter.sendCodeRecoveryOnEmail(//отправить сообщение на почту юзера с кодом подтверждения
                 email,
                 code
             )

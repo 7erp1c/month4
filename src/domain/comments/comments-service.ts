@@ -1,12 +1,12 @@
 import {ObjectId} from "mongodb";
-import {JwtService} from "../../application/jwt-service";
-import {CommentsRepositories} from "../../repositories/comments/commentsRepository";
+import {CommentsRepositories} from "../../repositories/commentsRepository";
 import {CommentLikeDTO, CommentView, CommentViewOutput, LikeStatusType} from "../../model/commentsType/commentsType";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
 import {ResultStatus} from "../../_util/enum";
 import {CommentsQueryRepository} from "../../repositoriesQuery/comments-query-repository";
 import {Result} from "../../model/result.type";
-import {UnauthorizedError} from "express-jwt";
+import {PostsService} from "../posts-service";
+import {usersQueryRepository} from "../../composition-root";
 
 
 export const CommentsService = {
@@ -19,24 +19,47 @@ export const CommentsService = {
         };
         await CommentsRepositories.updateCommentLike(updateModel);
     },
-    async createComments(content: string, foundPostId: string, userId: string): Promise<CommentViewOutput | null> {
-        const user = await UsersQueryRepository.findUserById(userId)
-
+    async createComments(content: string, postId: string, userId: string): Promise<Result<CommentViewOutput | null>> {
+        const foundPostsFromRep = await PostsService.findPostsByID(postId)
+        if (!foundPostsFromRep) return {
+            status: ResultStatus.NotFound,
+            extensions: [{field: "foundPostsFromRep(createComments)", message: "Post not found"}],
+            data: null
+        }
+        const user = await usersQueryRepository.findUserById(userId)
+        if (!user.data) return {
+            status: ResultStatus.NotFound,
+            extensions:[{field:"user(createComments)",message:"User not found"}],
+            data: null
+        }
         let newComment: CommentView = {
             id: new ObjectId().toString(),
             content: content,
             commentatorInfo: {
-                userId: user.data?.userId,
-                userLogin: user?.data?.login
+                userId: user.data.userId!,
+                userLogin: user.data.login
             },
             createdAt: new Date().toISOString(),
-            postId: foundPostId
+            postId: postId
 
         }
         const createdComment = await CommentsRepositories.createComments(newComment)
-        const returnCommentWithLike = await CommentsQueryRepository.getCommentById(createdComment.id, createdComment.commentatorInfo.userId);
-        if (!returnCommentWithLike) return null;
-        return returnCommentWithLike
+        if (!createdComment) return {
+            status: ResultStatus.NotFound,
+            extensions:[{field:"createdComment(createComments)",message:"Comment not create"}],
+            data: null
+        }
+        const returnCommentWithLike = await CommentsQueryRepository
+            .getCommentById(createdComment.id, createdComment.commentatorInfo.userId);
+        if (!returnCommentWithLike) return {
+            status: ResultStatus.NotFound,
+            extensions:[{field:"returnCommentWithLike(createComments)",message:"Comment witch likes not found"}],
+            data: null
+        }
+        return {
+            status: ResultStatus.Success,
+            data: returnCommentWithLike
+        }
 
     },
 
@@ -68,11 +91,11 @@ export const CommentsService = {
         }
         if (userId !== findCommentId.commentatorInfo.userId) return {
             status: ResultStatus.Forbidden,
-                extensions: [{
+            extensions: [{
                 field: 'user !== findCommentId.commentatorInfo.userId',
                 message: 'You are not find your comment'
             }],
-                data: false
+            data: false
         }
         //deleted:
         const deleteComment = await CommentsRepositories.deleteComments(id);

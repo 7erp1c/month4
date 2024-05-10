@@ -3,11 +3,11 @@ import {blogsRouter} from "./router/blogs-router";
 import {postsRouter} from "./router/posts-router";
 import {usersRouter} from "./router/users-router";
 import { authRouter } from './router/auth-router';
-import {commentsRouter} from "./router/comments/comments-router";
+import {commentsRouter} from "./router/comments-router";
 import cookieParser from "cookie-parser";
 import {apiReqLimitMiddleware} from "./middleware/authMiddleware/countAythDocumentsMiddleware";
 import useragent from 'express-useragent';
-import {securityRouter} from "./router/security/security-router";
+import {securityRouter} from "./router/security-router";
 import mongoose from "mongoose";
 import {clearDatabase} from "./domain/delete-all-mongoose/delete-all-service";
 

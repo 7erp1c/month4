@@ -5,7 +5,7 @@ interface Options {
     link?: string;
 }
 
-export const EmailAdapter = {
+export class EmailAdapter  {
 
     async sendEmail(email: string, login: string, code: string) {
         const transporter = nodemailer.createTransport({
@@ -17,7 +17,7 @@ export const EmailAdapter = {
             auth: {
                 user: "th.great.forest@gmail.com", //My Email
                 pass: process.env.GMAIL_COM_PASS,  // My pass
-            },
+            }
         });
         //async function main() {// async..await is not allowed in global scope, must use a wrapper
         // send mail with defined transport object
@@ -39,7 +39,7 @@ export const EmailAdapter = {
         // }
         // main().catch(console.error);
 
-    },
+    }
     async sendCodeRecoveryOnEmail(email: string, code: string) {
         const transporter = nodemailer.createTransport({
             service: 'gmail',// с гуглом остальное не надо
