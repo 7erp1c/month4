@@ -1,5 +1,5 @@
 import exp from "node:constants";
-import {QueryCommentsRequestType, SortCommentsRepositoryType} from "../model/commentsType/commentsType";
+import {LikeStatusType, QueryCommentsRequestType, SortCommentsRepositoryType} from "../model/commentsType/commentsType";
 
 export type postsCreateAndPutModel = {
     title: string,
@@ -17,7 +17,10 @@ export type postCreateForBlog = {
 export type commentCreateContent = {
     content:string
 }
-export type postIdForComments = {
+export type postIdParam = {
     postId: string
+}
+export type postLikeStatus = {
+    likeStatus:LikeStatusType
 }
 

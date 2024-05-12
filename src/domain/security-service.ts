@@ -1,8 +1,8 @@
-import {SessionsAddDB} from "../../model/authType/authType";
-import {SecurityRepository} from "../../repositories/securityRepository";
-import {SecurityQueryRepository} from "../../repositoriesQuery/security-query-repository";
-import { SecurityModel} from "../../db/mongoose/models";
-import {jwtService} from "../../composition-root";
+import {SessionsAddDB} from "../model/authType/authType";
+import {SecurityRepository} from "../repositories/securityRepository";
+import {SecurityQueryRepository} from "../repositoriesQuery/security-query-repository";
+import { SecurityModel} from "../db/mongoose/models";
+import {jwtService} from "../composition-root";
 
 export class SecurityService  {
     constructor(

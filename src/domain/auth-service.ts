@@ -1,4 +1,4 @@
-import {EmailsManager} from "../managers/email-manager";
+import {EmailsManager} from "./managers/email-manager";
 import {UsersService} from "./users-service";
 import {UsersInputType} from "../model/usersType/inputModelTypeUsers";
 import {UsersRepository} from "../repositories/usersRepository";
@@ -7,8 +7,8 @@ import {add} from "date-fns";
 import {RefreshTokenRepository} from "../repositories/refreshTokenRepository";
 import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
 import {ResultStatus} from "../_util/enum";
-import {JwtService} from "../application/jwt-service";
-import {Result} from "../model/result.type";
+import {JwtService} from "./jwt-service";
+import {Result} from "../_util/result.type";
 import {twoTokenType} from "../model/authType/authType";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";

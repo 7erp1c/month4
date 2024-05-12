@@ -14,7 +14,7 @@ export const getCommentsView = (dbComments: CommentViewOutput, likes:LikesInfoTy
         likesInfo:likes
     }
 }
-export const postLikesMapper =(like:WithId<PostLikeDto>):NewestLikeType=>{
+export const postLikesMapper =(like:PostLikeDto):NewestLikeType=>{
     return{
         addedAt: like.addedAt,
         userId: like.likedUserId,

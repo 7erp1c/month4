@@ -1,12 +1,12 @@
 import {ObjectId} from "mongodb";
-import {CommentsRepositories} from "../../repositories/commentsRepository";
-import {CommentLikeDTO, CommentView, CommentViewOutput, LikeStatusType} from "../../model/commentsType/commentsType";
-import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
-import {ResultStatus} from "../../_util/enum";
-import {CommentsQueryRepository} from "../../repositoriesQuery/comments-query-repository";
-import {Result} from "../../model/result.type";
-import {PostsService} from "../posts-service";
-import {usersQueryRepository} from "../../composition-root";
+import {CommentsRepositories} from "../repositories/commentsRepository";
+import {CommentLikeDTO, CommentView, CommentViewOutput, LikeStatusType} from "../model/commentsType/commentsType";
+import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
+import {ResultStatus} from "../_util/enum";
+import {CommentsQueryRepository} from "../repositoriesQuery/comments-query-repository";
+import {Result} from "../_util/result.type";
+import {PostsService} from "./posts-service";
+import {usersQueryRepository} from "../composition-root";
 
 
 export const CommentsService = {

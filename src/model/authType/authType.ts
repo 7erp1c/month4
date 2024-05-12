@@ -13,13 +13,6 @@ export type SessionsAddDB = {
     }
 }
 
-
-export type authInput = {
-    loginOrEmail: string,
-    password: string
-    ip:string
-}
-
 export type getAuthTypeEndpointMe = {
     email: string,
     login: string,

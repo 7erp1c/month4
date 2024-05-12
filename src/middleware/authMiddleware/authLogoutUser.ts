@@ -1,8 +1,8 @@
 import {NextFunction, Request, Response} from "express";
-import {JwtService} from "../../application/jwt-service";
+import {JwtService} from "../../domain/jwt-service";
 import {RefreshTokenRepository} from "../../repositories/refreshTokenRepository";
 
-import {SecurityService} from "../../domain/security/security-service";
+import {SecurityService} from "../../domain/security-service";
 import {jwtService, refreshTokenRepository, securityService} from "../../composition-root";
 
 

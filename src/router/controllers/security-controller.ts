@@ -1,6 +1,6 @@
 import {Request, Response} from "express";
 import {SecurityQueryRepository} from "../../repositoriesQuery/security-query-repository";
-import {SecurityService} from "../../domain/security/security-service";
+import {SecurityService} from "../../domain/security-service";
 import {RequestWithDelete} from "../../typeForReqRes/helperTypeForReq";
 import {_delete_one_} from "../../typeForReqRes/blogsCreateAndPutModel";
 import {jwtService} from "../../composition-root";

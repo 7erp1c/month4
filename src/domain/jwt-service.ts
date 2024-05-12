@@ -4,8 +4,8 @@ import {ObjectId} from "mongodb";
 import {RefreshTokenRepository} from "../repositories/refreshTokenRepository";
 import {v4 as uuidv4} from "uuid";
 import {RefreshTokenPayloadType, twoTokenType} from "../model/authType/authType";
-import {SecurityService} from "../domain/security/security-service";
-import {Result} from "../model/result.type";
+import {SecurityService} from "./security-service";
+import {Result} from "../_util/result.type";
 import {ResultStatus} from "../_util/enum";
 import {RefreshTokenModel} from "../db/mongoose/models";
 import {refreshTokenRepository} from "../composition-root";
@@ -124,7 +124,7 @@ export class JwtService  {
         return await refreshTokenRepository.checkToken(token)
 
     }
-    async deleteMany(token:string) {
+    async updateRefreshValid(token:string) {
         await this.refreshTokenRepository.updateRefreshValid(token)
     }
     async deleteByDeviseId(deviseId:string) {

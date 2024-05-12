@@ -1,4 +1,5 @@
 import {
+    BlogOutputType,
     blogsView,
     BlogViewModelType,
     SearchBlogRepositoryType,
@@ -49,17 +50,11 @@ export const BlogsQueryRepository = {
         }
     },
 
-     async getBlogById(id: string): Promise<blogsView | null> {
-        try{
-            const blog: blogsView | null = await BlogModel.findOne({id}, {projection: {_id: 0}});
-            if (!blog) {
-                return null;
-            }
-            return getBlogsView(blog)
-        }catch (err){
-            return null;
-        }
-    },
+    async getBlogById(id: string): Promise<BlogOutputType> {
+        const blog: blogsView|null= await BlogModel.findOne({id: id});
+        if (!blog) throw new Error();
+        return getBlogsView(blog);
+    }
 
 
 }

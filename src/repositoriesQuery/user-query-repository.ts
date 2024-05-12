@@ -7,7 +7,7 @@ import {
     UserViewModelType
 } from "../model/usersType/inputModelTypeUsers";
 import {getAuthUsersView, getUsersView} from "../model/usersType/getUsersView";
-import {Result} from "../model/result.type";
+import {Result} from "../_util/result.type";
 import {ResultStatus} from "../_util/enum";
 import {getAuthTypeEndpointMe} from "../model/authType/authType";
 import {UserModel} from "../db/mongoose/models";

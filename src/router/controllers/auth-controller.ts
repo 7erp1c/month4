@@ -1,13 +1,19 @@
-import {RequestWithUsers} from "../../typeForReqRes/helperTypeForReq";
-import {authInput} from "../../model/authType/authType";
+import {RequestWithAuth, RequestWithUsers} from "../../typeForReqRes/helperTypeForReq";
+
 import {Request, Response} from "express";
 import {AuthService} from "../../domain/auth-service";
 import {ResultStatus} from "../../_util/enum";
-import {addTokenInCookie} from "../../managers/token-add-cookie";
+import {addTokenInCookie} from "../../domain/managers/token-add-cookie";
 import {delay} from "../../__tests__/e2e/utils/timer";
 import {errorsHandler400} from "../../_util/errors-handler";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
 import {jwtService} from "../../composition-root";
+import {
+    authInput, authInputCode,
+    authInputEmail,
+    authInputRecovery,
+    authInputRegistration
+} from "../../typeForReqRes/auth-input-model/auth-input";
 
 export class AuthController {
     constructor(
@@ -30,14 +36,12 @@ export class AuthController {
             accessToken: loginUser.data!.access
         })
     }
-    async passwordRecovery(req: Request, res: Response) {
-        const {email} = req.body
-        await this.authService.sendRecoveryCode(email)
+    async passwordRecovery(req: RequestWithAuth<authInputEmail>, res: Response) {
+        await this.authService.sendRecoveryCode(req.body.email)
         return res.status(204).send("Even if current email is not registered (for prevent user's email detection)")
     }
-    async newUserPassword(req: Request, res: Response) {
-        const {newPassword, recoveryCode} = req.body
-        const updatePassword = await this.authService.updatePassword(newPassword, recoveryCode)
+    async newUserPassword(req: RequestWithAuth<authInputRecovery>, res: Response) {
+        const updatePassword = await this.authService.updatePassword(req.body.newPassword, req.body.recoveryCode)
         if (!updatePassword.status) return res.status(401).send(updatePassword.message)
         return res.status(204).send("If code is valid and new password is accepted")
     }
@@ -53,17 +57,15 @@ export class AuthController {
     }
 
     //регистрация и подтверждение
-    async registrationConfirmation(req: Request, res: Response) {
-        const {code} = req.body
-        const result = await this.authService.confirmCode(code)
+    async registrationConfirmation(req: RequestWithAuth<authInputCode>, res: Response) {
+        const result = await this.authService.confirmCode(req.body.code)
         if (!result.status) return res.status(400).send(result.message)
         return res.status(204).send(result + " Email was verified. Account was activated")
     }
 
-    async RegistrationUser(req: Request, res: Response) {
+    async RegistrationUser(req: RequestWithAuth<authInputRegistration>, res: Response) {
         try {
-            const {login, email, password} = req.body
-            const user = await this.authService.createUser(login, password, email)
+            const user = await this.authService.createUser(req.body.login, req.body.password, req.body.email)
             res.status(204).json({
                 user
             })
@@ -73,9 +75,8 @@ export class AuthController {
     }
 
     //повторная отправка email
-    async registrationEmailResending(req: Request, res: Response) {
-        const {email} = req.body
-        const result = await this.authService.confirmEmail(email)
+    async registrationEmailResending(req: RequestWithAuth<authInputEmail>, res: Response) {
+        const result = await this.authService.confirmEmail(req.body.email)
         if (!result) return res.sendStatus(401);
         return res.status(204).send(result + " Input data is accepted. Email with confirmation code will be send to passed email address. Confirmation code should be inside link as query param, for example: https://some-front.com/confirm-registration?code=youtcodehere")
     }

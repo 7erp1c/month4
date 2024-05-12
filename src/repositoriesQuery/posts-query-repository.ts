@@ -1,19 +1,23 @@
 import {
+    PostDtoType,
     PostLikeDto,
     PostOutputType, PostsLikesInfoType,
     PostsType,
     PostsViewModelType,
     SortPostRepositoryType
 } from "../model/postsType/postsType";
-import {getPostsView} from "../model/postsType/getPostsView";
+import {getPostsView, postMapper} from "../model/postsType/getPostsView";
 //import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
 import {PostLikeModel, PostModel} from "../db/mongoose/models";
+import {LikeStatusType} from "../model/commentsType/commentsType";
+import {postLikesMapper} from "../model/commentsType/getCommentsView";
+import {WithId} from "mongodb";
 
 
 
 export const PostsQueryRepository = {
 
-    async getAllPosts(sortData: SortPostRepositoryType, blogId?: string): Promise<PostsViewModelType> {
+    async getAllPosts(sortData: SortPostRepositoryType, blogId?: string,userId?:string): Promise<PostsViewModelType> {
         let searchKey = {}
         let sortKey = {};
         let sortDirection: number;
@@ -45,30 +49,51 @@ export const PostsQueryRepository = {
             .limit(+sortData.pageSize)
             .lean();
 
+        const mappedPosts: PostOutputType[] = [];
+
+        for (let i = 0; i < posts.length; i++) {
+            console.log(posts[i].id+ "  " + userId);
+            const likes = await this.getLikes(posts[i].id, userId);
+            mappedPosts.push(postMapper(posts[i], likes));
+        }
+
         return {
             pagesCount: pageCount,
             page: +sortData.pageNumber,
             pageSize: +sortData.pageSize,
             totalCount: documentsTotalCount,
-            items: posts.map(getPostsView)
+            items: mappedPosts
         };
 
     },
-
-
     // return one post by id
-    async getPostById(id: string): Promise<PostsType | null> {
-        try {
-            const post: PostsType | null = await PostModel.findOne({id}, {projection: {_id: 0}});
-            if (!post) {
-                return null;
+    async getPostById(id: string, userId?: string): Promise<PostOutputType> {
+
+        const post: PostsType | null = await PostModel.findOne({id: id});
+        if (!post) throw new Error("not_found");
+        const likes = await this.getLikes(id, userId);
+        return postMapper(post, likes);
+    },
+    async getLikes(postId: string, userId: string|null = null): Promise<PostsLikesInfoType> {
+        let likeStatus: LikeStatusType = "None";
+        console.log(userId);
+        if (userId) {
+            const userLike = await PostLikeModel.findOne({$and: [{postId: postId}, {likedUserId: userId}]}).lean();
+            if (userLike) {
+                likeStatus = userLike.status;
             }
-            return getPostsView(post);
-        } catch (err) {
-            return null;
         }
 
+        const likesCount = await PostLikeModel.countDocuments({$and: [{postId: postId}, {status: "Like"}]});
+        const dislikesCount = await PostLikeModel.countDocuments({$and: [{postId: postId}, {status: "Dislike"}]});
+        const newestLikes: Array<PostLikeDto> = await PostLikeModel.find({$and: [{postId: postId}, {status: "Like"}]}).sort({"addedAt": "desc"}).limit(3).lean();
 
+        return {
+            likesCount: likesCount,
+            dislikesCount: dislikesCount,
+            myStatus: likeStatus,
+            newestLikes: newestLikes.map(postLikesMapper)
+        };
     }
 
 

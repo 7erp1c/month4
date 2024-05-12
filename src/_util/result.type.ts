@@ -1,4 +1,4 @@
-import {ResultStatus} from "../_util/enum";
+import {ResultStatus} from "./enum";
 
 export type Result<T = null> = {
     status: ResultStatus

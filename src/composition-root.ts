@@ -1,17 +1,21 @@
+import "reflect-metadata";
+
 import {UsersRepository} from "./repositories/usersRepository";
 import {UsersService} from "./domain/users-service";
 import {UsersController} from "./router/controllers/user-controller";
 import {UsersQueryRepository} from "./repositoriesQuery/user-query-repository";
-import {EmailAdapter} from "./adapters/email-adapter";
-import {EmailsManager} from "./managers/email-manager";
+import {EmailAdapter} from "./repositories/adapters/email-adapter";
+import {EmailsManager} from "./domain/managers/email-manager";
 import {AuthController} from "./router/controllers/auth-controller";
 import {AuthService} from "./domain/auth-service";
 import {RefreshTokenRepository} from "./repositories/refreshTokenRepository";
-import {JwtService} from "./application/jwt-service";
-import {SecurityService} from "./domain/security/security-service";
+import {JwtService} from "./domain/jwt-service";
+import {SecurityService} from "./domain/security-service";
 import {SecurityQueryRepository} from "./repositoriesQuery/security-query-repository";
 import {SecurityRepository} from "./repositories/securityRepository";
 import {SecurityController} from "./router/controllers/security-controller";
+
+import {Container} from 'inversify'
 //SECURITY
 
 

@@ -1,4 +1,4 @@
-import {EmailAdapter} from "../adapters/email-adapter";
+import {EmailAdapter} from "../../repositories/adapters/email-adapter";
 
 
 

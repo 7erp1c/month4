@@ -6,29 +6,45 @@ import {
     RequestWithPostsPOST,
     RequestWithPut
 } from "../typeForReqRes/helperTypeForReq";
-import {commentCreateContent, postIdForComments, postsCreateAndPutModel} from "../typeForReqRes/postsCreateAndPutModel";
+import {
+    commentCreateContent,
+    postIdParam,
+    postLikeStatus,
+    postsCreateAndPutModel
+} from "../typeForReqRes/postsCreateAndPutModel";
 import {_delete_all_} from "../typeForReqRes/blogsCreateAndPutModel";
 import {PostsService} from "../domain/posts-service";
 import {authGuardMiddleware} from "../middleware/authGuardMiddleware";
-import {commentValidation, postsValidation} from "../middleware/inputValidationMiddleware";
+import {commentValidation, tValidationLikes, postsValidation} from "../middleware/inputValidationMiddleware";
 import {errorsValidation} from "../middleware/errorsValidation";
 import {QueryBlogRequestType} from "../model/blogsType/blogsView";
 import {QueryPostRequestType, SortPostRepositoryType} from "../model/postsType/postsType";
 import {PostsQueryRepository} from "../repositoriesQuery/posts-query-repository";
-import {CommentsService} from "../domain/comments/comments-service";
+import {CommentsService} from "../domain/comments-service";
 import {CommentsQueryRepository} from "../repositoriesQuery/comments-query-repository";
-import {SortCommentsRepositoryType} from "../model/commentsType/commentsType";
+import {LikeStatusType, SortCommentsRepositoryType} from "../model/commentsType/commentsType";
 import {paginatorValidator} from "../middleware/sortingAndPaginationMiddleware";
 import {authTokenMiddelware} from "../middleware/postMiddelware/aurhTokenMiddelware";
 import {errorsHandler404} from "../_util/errors-handler";
 import {ResultStatus} from "../_util/enum";
+import {getCommentTokenMiddelware} from "../middleware/commentsMiddelware/getCommentAllLikes";
+import {getUserIdFromAccess} from "../middleware/getUserId/getUserIdFromAccess";
 
 
 
 export const postsRouter = Router({})
 postsRouter
-    .get('/:postId/comments', authTokenMiddelware, paginatorValidator, errorsValidation,
-        async (req: RequestPostsComments<postIdForComments, any>, res: Response) => {
+    .put('/:postId/like-status',authTokenMiddelware, tValidationLikes, errorsValidation, async(req:RequestWithPut<postIdParam,postLikeStatus>, res:Response)=>{
+        try {
+            await PostsService
+                .createLikePost(req.params.postId, req.body.likeStatus, req.userId!,req.user.accountData.login!)
+            res.sendStatus(204)
+        } catch (err) {
+            errorsHandler404(res, err);
+        }
+    })
+    .get('/:postId/comments', getUserIdFromAccess, paginatorValidator, errorsValidation,
+        async (req: RequestPostsComments<postIdParam, any>, res: Response) => {
             try {
                 const sortData: SortCommentsRepositoryType = {
                     sortBy: req.query.sortBy || "createdAt",
@@ -46,14 +62,15 @@ postsRouter
 
 
         })
-    .post('/:postId/comments', authTokenMiddelware, commentValidation, errorsValidation,
-        async (req: RequestWithPut<postIdForComments, commentCreateContent>, res: Response) => {
+    .post('/:postId/comments', getUserIdFromAccess, commentValidation, errorsValidation,
+        async (req: RequestWithPut<postIdParam, commentCreateContent>, res: Response) => {
             const newComment = await CommentsService.createComments(req.body.content, req.params.postId, req.userId!)
             if (newComment.status === ResultStatus.NotFound) return res.status(404).send(newComment.extensions)
             return res.status(201).send(newComment.data)
         })
 
-    .get('/', authTokenMiddelware, async (req: RequestWithBlogsPOST<QueryPostRequestType>, res: Response) => {
+    .get('/', getUserIdFromAccess, async (req: RequestWithBlogsPOST<QueryPostRequestType>, res: Response) => {
+        let posts;
         const query: QueryBlogRequestType = req.query
         const sortData: SortPostRepositoryType = {
             sortBy: query.sortBy || "createdAt",
@@ -61,21 +78,30 @@ postsRouter
             pageNumber: query.pageNumber || 1,
             pageSize: query.pageSize || 10
         }
-        const posts = await PostsQueryRepository.getAllPosts(sortData,);
+        if (req.user) {
+            posts = await PostsQueryRepository.getAllPosts(sortData, undefined, req.user.id);
+        } else {
+            posts = await PostsQueryRepository.getAllPosts(sortData);
+        }
         res.status(200).json(posts);
     })
 
-    .post('/', authGuardMiddleware, postsValidation, errorsValidation,
+    .post('/',getUserIdFromAccess, postsValidation, errorsValidation,
         async (req: RequestWithPostsPOST<postsCreateAndPutModel>, res: Response) => {
         const newPostsFromRep = await PostsService
-            .createPosts(req.body.title, req.body.shortDescription, req.body.content, req.body.blogId)//как сократить
-
+            .createPosts(
+                req.body.title,
+                req.body.shortDescription,
+                req.body.content,
+                req.body.blogId,
+                req.userId!
+            )
         res.status(201).send(newPostsFromRep)
     })
 
 
-    .get('/:id', async (req: Request, res: Response) => {
-        const foundPostsFromRep = await PostsService.findPostsByID(req.params.id)
+    .get('/:id',getUserIdFromAccess, async (req: Request, res: Response) => {
+        const foundPostsFromRep = await PostsService.findPostsByIDQuery(req.params.id,req.userId!)
         if (!foundPostsFromRep) {
             res.sendStatus(404)
             return;

@@ -1,9 +1,9 @@
 import {Response, Router} from "express";
 import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
-import {CommentsService} from "../domain/comments/comments-service";
+import {CommentsService} from "../domain/comments-service";
 import {RequestCommentsGet, RequestCommentsPut, RequestWithDelete} from "../typeForReqRes/helperTypeForReq";
 import {_delete_all_} from "../typeForReqRes/blogsCreateAndPutModel";
-import {commentValidation, commentValidationLikes} from "../middleware/inputValidationMiddleware";
+import {commentValidation, tValidationLikes} from "../middleware/inputValidationMiddleware";
 import {errorsValidation} from "../middleware/errorsValidation";
 import {authTokenMiddelware} from "../middleware/postMiddelware/aurhTokenMiddelware";
 import {errorsHandler404} from "../_util/errors-handler";
@@ -20,7 +20,7 @@ import {ResultStatus} from "../_util/enum";
 export const commentsRouter = Router({})
 
 commentsRouter
-    .put('/:commentId/like-status', authTokenMiddelware, commentValidationLikes, errorsValidation,
+    .put('/:commentId/like-status', authTokenMiddelware, tValidationLikes, errorsValidation,
         async (req: RequestCommentsPut<commentsIdPutParams, commentsPutBodyStatus>, res: Response) => {
             try {
                 await CommentsService.createLikeComment(req.params.commentId, req.body.likeStatus, req.userId!)

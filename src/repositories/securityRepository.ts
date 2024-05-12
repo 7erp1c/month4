@@ -1,5 +1,5 @@
 import {SessionsAddDB} from "../model/authType/authType";
-import {JwtService} from "../application/jwt-service";
+import {JwtService} from "../domain/jwt-service";
 import {ApiRequestModel, SecurityModel} from "../db/mongoose/models";
 import {jwtService} from "../composition-root";
 

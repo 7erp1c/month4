@@ -1,6 +1,6 @@
 
 import {AuthService} from "../../domain/auth-service";
-import {EmailsManager} from "../../managers/email-manager";
+import {EmailsManager} from "../../domain/managers/email-manager";
 import {testSeader} from "../e2e/utils/test.seader";
 import {UsersService} from "../../domain/users-service";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";

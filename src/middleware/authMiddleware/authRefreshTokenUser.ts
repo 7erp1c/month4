@@ -1,6 +1,6 @@
 import {Request, Response, NextFunction} from "express";
-import {JwtService} from "../../application/jwt-service";
-import {Result} from "../../model/result.type";
+import {JwtService} from "../../domain/jwt-service";
+import {Result} from "../../_util/result.type";
 import {jwtService} from "../../composition-root";
 
 

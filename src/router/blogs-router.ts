@@ -15,6 +15,9 @@ import {QueryBlogRequestType, SearchBlogRepositoryType, SortBlogRepositoryType} 
 import {BlogsQueryRepository} from "../repositoriesQuery/blogs-query-repository";
 import {ParamsId, SortPostRepositoryType} from "../model/postsType/postsType";
 import {PostsQueryRepository} from "../repositoriesQuery/posts-query-repository";
+import {getCommentTokenMiddelware} from "../middleware/commentsMiddelware/getCommentAllLikes";
+import {authTokenMiddelware} from "../middleware/postMiddelware/aurhTokenMiddelware";
+import {getUserIdFromAccess} from "../middleware/getUserId/getUserIdFromAccess";
 
 
 export const blogsRouter = Router({})
@@ -45,37 +48,34 @@ blogsRouter.post('/', authGuardMiddleware, blogsValidation, errorsValidation,
        }
     })
 
-blogsRouter.get('/:blogId/posts', async (req: RequestWithPut<ParamsId, postsCreateAndPutModel>, res: Response) => {
-    const blogId = req.params.blogId
-    const query: QueryBlogRequestType = req.query
+blogsRouter.get('/:blogId/posts',getUserIdFromAccess,
+    async (req: RequestWithPut<ParamsId, postsCreateAndPutModel>, res: Response) => {
+
+        let posts;
+        const query: QueryBlogRequestType = req.query
         const sortData: SortPostRepositoryType = {
             sortBy: query.sortBy || "createdAt",
             sortDirection: query.sortDirection || "desc",
             pageNumber: query.pageNumber || 1,
             pageSize: query.pageSize || 10
         }
-    const posts = await PostsQueryRepository.getAllPosts(sortData, req.params.blogId);
-
-    const blog = await BlogsService.findBlogsByID(blogId);
-    if (!blog) {
-        res.sendStatus(404); // Возвращаем статус 404, если blogId не найден
-        return;
-    }
-        return res.status(200).json(posts);
+        if (req.userId) {
+            posts = await PostsQueryRepository.getAllPosts(sortData, req.params.blogId, req.userId!);
+        } else {
+            posts = await PostsQueryRepository.getAllPosts(sortData, req.params.blogId,);
+        }
+        res.status(200).json(posts);
     })
 
-blogsRouter.post('/:blogId/posts', authGuardMiddleware, blogPostValidation, errorsValidation,
+blogsRouter.post('/:blogId/posts',getUserIdFromAccess, authGuardMiddleware, blogPostValidation, errorsValidation,
     async (req: RequestWithPut<postCreateForBlog, postsCreateAndPutModel>, res: Response) => {
-        const {title, shortDescription, content} = req.body;
-        const blogId = req.params.blogId;
-        // process.env.BLOG_ID = blogId.toString()
-
-        const blog = await BlogsService.findBlogsByID(blogId);
+        const blog = await BlogsService.findBlogsByID(req.params.blogId);
         if (!blog) {
             res.sendStatus(404); // Возвращаем статус 404, если blogId не найден
             return;
         }
-        const newPostForBlog = await PostsService.createPosts(title, shortDescription, content, blogId)
+        const newPostForBlog = await PostsService
+            .createPosts(req.body.title, req.body.shortDescription, req.body.content, req.params.blogId, req.userId!)
         res.status(201).send(newPostForBlog)
 
     })

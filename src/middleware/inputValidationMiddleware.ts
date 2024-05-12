@@ -78,7 +78,7 @@ export const authCodeValidation = [
 export const commentValidation = [
     body("content").trim().notEmpty().isString().isLength({min: 20, max: 300}).bail()
 ]
-export const commentValidationLikes = [
+export const tValidationLikes = [
     body("likeStatus").trim().isString().notEmpty().isIn(["None", "Like","Dislike"]).bail()
 ]
 
