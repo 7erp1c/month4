@@ -1,5 +1,4 @@
 import {RequestWithAuth, RequestWithUsers} from "../../typeForReqRes/helperTypeForReq";
-
 import {Request, Response} from "express";
 import {AuthService} from "../../domain/auth-service";
 import {ResultStatus} from "../../_util/enum";

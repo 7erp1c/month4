@@ -1,27 +1,12 @@
-import {Request, Response, Router} from "express";
-import {UsersService} from "../domain/users-service";
-import {authInput} from "../model/authType/authType";
-import {RequestWithUsers} from "../typeForReqRes/helperTypeForReq";
-import {JwtService} from "../domain/jwt-service";
-
+import { Router} from "express";
 import {
     authCodeValidation,
-    authEmailValidation,
     authValidation, newPasswordValid, passRecValidation,
     usersValidation
 } from "../middleware/inputValidationMiddleware";
 import {errorsValidation} from "../middleware/errorsValidation";
-import {AuthService} from "../domain/auth-service";
-import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
-import {ResultStatus} from "../_util/enum";
-
 import {authTokenLogoutMiddleware} from "../middleware/authMiddleware/authLogoutUser";
-import {delay} from "../__tests__/e2e/utils/timer";
-import {addTokenInCookie} from "../domain/managers/token-add-cookie";
-import {EmailsManager} from "../domain/managers/email-manager";
 import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
-import {errorsHandler400, errorsHandler404} from "../_util/errors-handler";
-import {AuthController} from "./controllers/auth-controller";
 import {authController} from "../composition-root";
 
 

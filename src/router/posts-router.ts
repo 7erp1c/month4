@@ -10,9 +10,9 @@ import {
     commentCreateContent,
     postIdParam,
     postLikeStatus,
-    postsCreateAndPutModel
-} from "../typeForReqRes/postsCreateAndPutModel";
-import {_delete_all_} from "../typeForReqRes/blogsCreateAndPutModel";
+    postsInput
+} from "../typeForReqRes/post-input-model/posts-input";
+import {allId} from "../typeForReqRes/blogs-input-model/blogs-input";
 import {PostsService} from "../domain/posts-service";
 import {authGuardMiddleware} from "../middleware/authGuardMiddleware";
 import {commentValidation, tValidationLikes, postsValidation} from "../middleware/inputValidationMiddleware";
@@ -87,7 +87,7 @@ postsRouter
     })
 
     .post('/',getUserIdFromAccess, postsValidation, errorsValidation,
-        async (req: RequestWithPostsPOST<postsCreateAndPutModel>, res: Response) => {
+        async (req: RequestWithPostsPOST<postsInput>, res: Response) => {
         const newPostsFromRep = await PostsService
             .createPosts(
                 req.body.title,
@@ -127,7 +127,7 @@ postsRouter
 
     })
 
-    .delete('/:id', authGuardMiddleware, async (req: RequestWithDelete<_delete_all_>, res: Response) => {
+    .delete('/:id', authGuardMiddleware, async (req: RequestWithDelete<allId>, res: Response) => {
         const isDelete = await PostsService.deletePosts(req.params.id)
         if (isDelete) {
             res.sendStatus(204)//Not Found

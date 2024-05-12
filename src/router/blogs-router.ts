@@ -1,5 +1,5 @@
 import {Request, Response, Router} from "express";
-import {_delete_all_, blogsCreateAndPutModel} from "../typeForReqRes/blogsCreateAndPutModel";
+import {allId, blogParamsId, blogsInput} from "../typeForReqRes/blogs-input-model/blogs-input";
 import {
     RequestWithBlogsPOST,
     RequestWithDelete,
@@ -9,14 +9,12 @@ import {BlogsService} from "../domain/blogs-service";
 import {authGuardMiddleware} from "../middleware/authGuardMiddleware";
 import {errorsValidation} from "../middleware/errorsValidation";
 import {blogPostValidation, blogsValidation} from "../middleware/inputValidationMiddleware";
-import {postCreateForBlog, postsCreateAndPutModel} from "../typeForReqRes/postsCreateAndPutModel";
+import {postCreateForBlog, postsInput} from "../typeForReqRes/post-input-model/posts-input";
 import {PostsService} from "../domain/posts-service";
 import {QueryBlogRequestType, SearchBlogRepositoryType, SortBlogRepositoryType} from "../model/blogsType/blogsView";
 import {BlogsQueryRepository} from "../repositoriesQuery/blogs-query-repository";
-import {ParamsId, SortPostRepositoryType} from "../model/postsType/postsType";
+import { SortPostRepositoryType} from "../model/postsType/postsType";
 import {PostsQueryRepository} from "../repositoriesQuery/posts-query-repository";
-import {getCommentTokenMiddelware} from "../middleware/commentsMiddelware/getCommentAllLikes";
-import {authTokenMiddelware} from "../middleware/postMiddelware/aurhTokenMiddelware";
 import {getUserIdFromAccess} from "../middleware/getUserId/getUserIdFromAccess";
 
 
@@ -41,7 +39,7 @@ blogsRouter.get('/', async (req: RequestWithBlogsPOST<QueryBlogRequestType>, res
 })
 
 blogsRouter.post('/', authGuardMiddleware, blogsValidation, errorsValidation,
-    async (req: RequestWithBlogsPOST<blogsCreateAndPutModel>, res: Response) => {
+    async (req: RequestWithBlogsPOST<blogsInput>, res: Response) => {
         const newBlogsFromRep = await BlogsService.createBlogs(req.body.name, req.body.description, req.body.websiteUrl)
        if(newBlogsFromRep) {
             res.status(201).send(newBlogsFromRep)
@@ -49,7 +47,7 @@ blogsRouter.post('/', authGuardMiddleware, blogsValidation, errorsValidation,
     })
 
 blogsRouter.get('/:blogId/posts',getUserIdFromAccess,
-    async (req: RequestWithPut<ParamsId, postsCreateAndPutModel>, res: Response) => {
+    async (req: RequestWithPut<blogParamsId, postsInput>, res: Response) => {
 
         let posts;
         const query: QueryBlogRequestType = req.query
@@ -68,7 +66,7 @@ blogsRouter.get('/:blogId/posts',getUserIdFromAccess,
     })
 
 blogsRouter.post('/:blogId/posts',getUserIdFromAccess, authGuardMiddleware, blogPostValidation, errorsValidation,
-    async (req: RequestWithPut<postCreateForBlog, postsCreateAndPutModel>, res: Response) => {
+    async (req: RequestWithPut<postCreateForBlog, postsInput>, res: Response) => {
         const blog = await BlogsService.findBlogsByID(req.params.blogId);
         if (!blog) {
             res.sendStatus(404); // Возвращаем статус 404, если blogId не найден
@@ -91,7 +89,8 @@ blogsRouter.get('/:id', async (req: Request, res: Response) => {
 })
 
 
-blogsRouter.put('/:id', authGuardMiddleware, blogsValidation, errorsValidation, async (req: Request, res: Response) => {
+blogsRouter.put('/:id', authGuardMiddleware, blogsValidation, errorsValidation,
+    async (req: Request, res: Response) => {
     const isUpdateBlogs = await BlogsService.updateBlogs(req.params.id, req.body.name, req.body.description, req.body.websiteUrl)
     if (isUpdateBlogs) {
         res.status(204).send()
@@ -103,7 +102,7 @@ blogsRouter.put('/:id', authGuardMiddleware, blogsValidation, errorsValidation, 
     }
 })
 
-blogsRouter.delete('/:id', authGuardMiddleware,errorsValidation, async (req: RequestWithDelete<_delete_all_>, res: Response) => {
+blogsRouter.delete('/:id', authGuardMiddleware,errorsValidation, async (req: RequestWithDelete<allId>, res: Response) => {
 
     const isDelete = await BlogsService.deleteBlogs(req.params.id)
     if (isDelete) {

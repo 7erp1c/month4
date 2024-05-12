@@ -8,7 +8,7 @@ import {
     SortUsersRepositoryType
 } from "../../model/usersType/inputModelTypeUsers";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
-import {_delete_all_} from "../../typeForReqRes/blogsCreateAndPutModel";
+import {allId} from "../../typeForReqRes/blogs-input-model/blogs-input";
 
 
 export class UsersController {
@@ -46,7 +46,7 @@ res.status(200).json(users);
     }
 }
 
-    async deleteUser(req: RequestWithDelete<_delete_all_>, res: Response)  {
+    async deleteUser(req: RequestWithDelete<allId>, res: Response)  {
     const isDelete = await this.usersService.deleteUser(req.params.id)
     if (isDelete) {
         res.sendStatus(204);

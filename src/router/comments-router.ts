@@ -2,7 +2,7 @@ import {Response, Router} from "express";
 import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
 import {CommentsService} from "../domain/comments-service";
 import {RequestCommentsGet, RequestCommentsPut, RequestWithDelete} from "../typeForReqRes/helperTypeForReq";
-import {_delete_all_} from "../typeForReqRes/blogsCreateAndPutModel";
+import {allId} from "../typeForReqRes/blogs-input-model/blogs-input";
 import {commentValidation, tValidationLikes} from "../middleware/inputValidationMiddleware";
 import {errorsValidation} from "../middleware/errorsValidation";
 import {authTokenMiddelware} from "../middleware/postMiddelware/aurhTokenMiddelware";
@@ -13,7 +13,7 @@ import {
     commentsPutBodyContent,
     commentsPutBodyStatus,
     commentsIdPutParams
-} from "../typeForReqRes/commentsReqModel/comments-Input-model";
+} from "../typeForReqRes/comments-input-model/comments-Input";
 import {ResultStatus} from "../_util/enum";
 
 
@@ -38,7 +38,7 @@ commentsRouter
             return res.sendStatus(204)
         })
 
-    .delete('/:id', authRefreshTokenMiddleware, async (req: RequestWithDelete<_delete_all_>, res: Response) => {
+    .delete('/:id', authRefreshTokenMiddleware, async (req: RequestWithDelete<allId>, res: Response) => {
         const result = await CommentsService.deleteComments(req.params.id,req.userId!)
         if (result.status === ResultStatus.NotFound) return res.status(404).send(result.extensions)
         if (result.status === ResultStatus.Forbidden) return res.status(403).send(result.extensions)

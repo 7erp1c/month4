@@ -69,6 +69,3 @@ export type SortPostRepositoryType = {
     pageSize: number
 }
 //Query type↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑Query type↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑Query type
-export type ParamsId = {
-    blogId:string
-}

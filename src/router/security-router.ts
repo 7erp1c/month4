@@ -1,13 +1,6 @@
-import {Request, Response, Router} from "express";
-import {SecurityService} from "../domain/security-service";
-import {RequestWithDelete} from "../typeForReqRes/helperTypeForReq";
-import {_delete_all_, _delete_one_} from "../typeForReqRes/blogsCreateAndPutModel";
-import {SecurityQueryRepository} from "../repositoriesQuery/security-query-repository";
+import {Router} from "express";
 import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
 import {authTokenMiddlewareForSessions} from "../middleware/authMiddleware/authTokenMiddlewareForSessions";
-import {AuthService} from "../domain/auth-service";
-import {JwtService} from "../domain/jwt-service";
-import {SecurityController} from "./controllers/security-controller";
 import {securityController} from "../composition-root";
 
 
