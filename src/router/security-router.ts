@@ -1,9 +1,10 @@
 import {Router} from "express";
 import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
 import {authTokenMiddlewareForSessions} from "../middleware/authMiddleware/authTokenMiddlewareForSessions";
-import {securityController} from "../composition-root";
+import {container} from "../composition-root";
+import {SecurityController} from "./controllers/security-controller";
 
-
+const securityController = container.resolve<SecurityController>(SecurityController)
 export const securityRouter = Router({})
 
     .get("/devices", authRefreshTokenMiddleware, securityController.getDevices.bind(securityController))

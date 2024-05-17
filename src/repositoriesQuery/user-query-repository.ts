@@ -11,9 +11,10 @@ import {Result} from "../_util/result.type";
 import {ResultStatus} from "../_util/enum";
 import {getAuthTypeEndpointMe} from "../model/authType/authType";
 import {UserModel} from "../db/mongoose/models";
+import {injectable} from "inversify";
 
 
-
+@injectable()
 export class UsersQueryRepository  {
 
         async findFullUsers(sortData: SortUsersRepositoryType,searchLogin: SearchUsersLoginRepositoryType,searchEmail:SearchUsersEmailRepositoryType): Promise<UserViewModelType> {

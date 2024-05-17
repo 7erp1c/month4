@@ -1,8 +1,8 @@
 import {SessionsAddDB} from "../model/authType/authType";
-import {JwtService} from "../domain/jwt-service";
 import {ApiRequestModel, SecurityModel} from "../db/mongoose/models";
-import {jwtService} from "../composition-root";
-
+import {injectable} from "inversify";
+import {JwtService} from "../domain/jwt-service";
+@injectable()
 export class SecurityRepository  {
 
     async saveRequestInformation(ip: string, url: string) {
@@ -30,15 +30,13 @@ export class SecurityRepository  {
         await SecurityModel.create(newSession)
     }
     //удаляем все сессии User кроме актуальной, протуханим токены User, кроме актуального
-    async deleteDevicesSessions(userId: string, token: string) {
-        const decode = await jwtService.decodeRefreshToken(token)
-        const deviceId = decode?.deviceId
+    async deleteDevicesSessions(userId: string, deviceId: string) {
         // Получаем все сессии для данного пользователя
         const userDevices = await SecurityModel.find({userId}).lean();
         // Удаляем все сессии, кроме текущей
         for (const device of userDevices) {
             if (device.deviceId !== deviceId) {
-                await SecurityModel.deleteMany({deviceId: device.deviceId});
+                await SecurityModel.deleteMany({deviceId: deviceId});
             }
         }
         // Получаем все токены для данного пользователя
@@ -57,21 +55,23 @@ export class SecurityRepository  {
         const result = await SecurityModel.deleteOne({deviceId: id})
         return result.deletedCount === 1
     }
-    async updateDataToken(token: string): Promise<boolean> {
-        const decode = await jwtService.decodeRefreshToken(token)
-        const decodeIat = Number(decode?.iat)
-        const decodeExp = Number(decode?.exp)
-        const iatIsoString = new Date(decodeIat * 1000).toISOString();
-        const expIsoString = new Date(decodeExp * 1000).toISOString();
+    async updateDataToken({userId,deviceId,iat,exp}:{userId:string,deviceId:string,iat:string,exp:string}): Promise<boolean> {
+
         const result = await SecurityModel
-            .updateOne({userId: decode?.userId, deviceId: decode?.deviceId}, {
+            .updateOne({userId: userId, deviceId: deviceId}, {
                 $set: {
-                    lastActiveDate: iatIsoString,
-                    "refreshToken.createdAt": iatIsoString,
-                    "refreshToken.expiredAt": expIsoString
+                    lastActiveDate: iat,
+                    "refreshToken.createdAt": iat,
+                    "refreshToken.expiredAt": exp
                 }
             })
         return result.matchedCount === 1
+    }
+    async findSessionByDeviceId(deviceId: string) {
+        const result = await SecurityModel
+            .findOne({deviceId: deviceId}, {projection: {_id: 0}})
+        if (!result) return null
+        return result
     }
 
 

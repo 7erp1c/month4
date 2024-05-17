@@ -9,12 +9,13 @@ import {
 } from "../../model/usersType/inputModelTypeUsers";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
 import {allId} from "../../typeForReqRes/blogs-input-model/blogs-input";
+import {inject, injectable} from "inversify";
 
-
+@injectable()
 export class UsersController {
 
-    constructor(protected usersService: UsersService,
-                protected usersQueryRepository: UsersQueryRepository) {}
+    constructor(@inject(UsersService) protected usersService: UsersService,
+                @inject(UsersQueryRepository) protected usersQueryRepository: UsersQueryRepository) {}
 
     async getUsers (req: RequestWithUsers<QueryUserRequestType>, res: Response) {
     const query: QueryUserRequestType = req.query

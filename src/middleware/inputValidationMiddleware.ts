@@ -1,9 +1,13 @@
 import {body} from "express-validator";
-import {UsersService} from "../domain/users-service";
-import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
 import {BlogModel} from "../db/mongoose/models";
+import {container} from "../composition-root";
+import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
 import {UsersRepository} from "../repositories/usersRepository";
-import {usersQueryRepository, usersRepository, usersService} from "../composition-root";
+import {UsersService} from "../domain/users-service";
+
+const usersQueryRepository = container.get<UsersQueryRepository>(UsersQueryRepository)
+const usersRepository = container.get<UsersRepository>(UsersRepository)
+const usersService = container.get<UsersService>(UsersService)
 
 
 export const blogsValidation = [

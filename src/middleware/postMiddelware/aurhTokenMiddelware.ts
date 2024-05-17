@@ -2,8 +2,10 @@ import {NextFunction, Request, Response} from "express";
 import {UsersRepository} from "../../repositories/usersRepository";
 import {AuthService} from "../../domain/auth-service";
 import {AUTH_METHODS} from "../../setting";
-import {UnauthorizedError} from "express-jwt";
-import {authService, usersRepository} from "../../composition-root";
+import {container} from "../../composition-root";
+
+const authService = container.get<AuthService>(AuthService)
+const usersRepository = container.get<UsersRepository>(UsersRepository)
 
 export const authTokenMiddelware = async (req: Request, res: Response, next: NextFunction) => {
 

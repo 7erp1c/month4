@@ -1,9 +1,11 @@
 import {NextFunction, Request, Response} from "express";
 import {JwtService} from "../../domain/jwt-service";
+import {container} from "../../composition-root";
 import {RefreshTokenRepository} from "../../repositories/refreshTokenRepository";
-
 import {SecurityService} from "../../domain/security-service";
-import {jwtService, refreshTokenRepository, securityService} from "../../composition-root";
+const jwtService = container.get<JwtService>(JwtService)
+const securityService = container.get<SecurityService>(SecurityService)
+const refreshTokenRepository = container.get<RefreshTokenRepository>(RefreshTokenRepository)
 
 
 export const authTokenLogoutMiddleware = async (req: Request, res: Response, next: NextFunction) => {

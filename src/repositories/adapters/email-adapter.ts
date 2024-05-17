@@ -1,10 +1,11 @@
 import nodemailer from "nodemailer";
+import {injectable} from "inversify";
 
 interface Options {
     callbackOnLocationHash?: boolean;
     link?: string;
 }
-
+@injectable()
 export class EmailAdapter  {
 
     async sendEmail(email: string, login: string, code: string) {

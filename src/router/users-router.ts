@@ -1,10 +1,11 @@
 import {Router} from "express";
-import {usersController} from "../composition-root";
+import {container} from "../composition-root";
 import {authGuardMiddleware} from "../middleware/authGuardMiddleware";
 import {usersValidation} from "../middleware/inputValidationMiddleware";
 import {errorsValidation} from "../middleware/errorsValidation";
+import {UsersController} from "./controllers/user-controller";
 
-
+const usersController = container.resolve<UsersController>(UsersController)
 
 export const usersRouter = Router();
 usersRouter

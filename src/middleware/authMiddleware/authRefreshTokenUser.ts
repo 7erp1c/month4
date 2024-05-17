@@ -1,11 +1,8 @@
 import {Request, Response, NextFunction} from "express";
 import {JwtService} from "../../domain/jwt-service";
-import {Result} from "../../_util/result.type";
-import {jwtService} from "../../composition-root";
+import {container} from "../../composition-root";
 
-
-
-
+const jwtService = container.get<JwtService>(JwtService)
 
 export const authRefreshTokenMiddleware = async (req: Request, res: Response, next: NextFunction) => {
     const {refreshToken} = req.cookies

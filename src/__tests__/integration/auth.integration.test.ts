@@ -1,13 +1,11 @@
-
+import {testSeader} from "../e2e/utils/test.seader";
+import mongoose from "mongoose";
+import {container} from "../../composition-root";
 import {AuthService} from "../../domain/auth-service";
 import {EmailsManager} from "../../domain/managers/email-manager";
-import {testSeader} from "../e2e/utils/test.seader";
-import {UsersService} from "../../domain/users-service";
-import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
-import {delay} from "../e2e/utils/timer";
-import mongoose from "mongoose";
-import {authService, emailsManager} from "../../composition-root";
 
+const authService = container.get<AuthService>(AuthService)
+const emailsManager = container.get<EmailsManager>(EmailsManager)
 describe("AuthTest-integration", () => {
     const mongoURI = 'mongodb://0.0.0.0:27017/e2e_test'
     beforeAll(async () => {

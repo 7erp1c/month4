@@ -2,9 +2,10 @@ import {NextFunction, Request, Response} from "express";
 import {UsersRepository} from "../../repositories/usersRepository";
 import {AuthService} from "../../domain/auth-service";
 import {AUTH_METHODS} from "../../setting";
-import {UnauthorizedError} from "express-jwt";
-import {authService, usersRepository} from "../../composition-root";
+import {container} from "../../composition-root";
 
+const usersRepository = container.get<UsersRepository>(UsersRepository)
+const authService = container.get<AuthService>(AuthService)
 export const getCommentTokenMiddelware = async (req: Request, res: Response, next: NextFunction) => {
 
     const authHeader = req.header("authorization")?.split(" "); // Получаем значение поля в заголовке

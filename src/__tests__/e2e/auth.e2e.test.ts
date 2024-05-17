@@ -1,8 +1,6 @@
 //в тесте используется таймер т.к. токены генерятся одинаковые
 import request from "supertest"
-
 import {app} from "../../app";
-import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
 import {delay} from "./utils/timer";
 import {
     CreateUserThroughRegistration,
@@ -12,12 +10,12 @@ import {
     oldPassword,
     userEmail
 } from "./utils/createUser";
-
 import mongoose from "mongoose";
-import {RefreshTokenModel, UserModel} from "../../db/mongoose/models";
+import { UserModel} from "../../db/mongoose/models";
+import {container} from "../../composition-root";
 import {UsersRepository} from "../../repositories/usersRepository";
-import {body} from "express-validator";
-import {usersRepository} from "../../composition-root";
+
+const usersRepository = container.get<UsersRepository>(UsersRepository)
 
 
 const routerName = '/auth/'

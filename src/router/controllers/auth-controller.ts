@@ -6,19 +6,21 @@ import {addTokenInCookie} from "../../domain/managers/token-add-cookie";
 import {delay} from "../../__tests__/e2e/utils/timer";
 import {errorsHandler400} from "../../_util/errors-handler";
 import {UsersQueryRepository} from "../../repositoriesQuery/user-query-repository";
-import {jwtService} from "../../composition-root";
 import {
     authInput, authInputCode,
     authInputEmail,
     authInputRecovery,
     authInputRegistration
 } from "../../typeForReqRes/auth-input-model/auth-input";
-
+import {injectable, inject } from "inversify";
+import {JwtService} from "../../domain/jwt-service";
+@injectable()
 export class AuthController {
+
     constructor(
-        protected authService: AuthService,
-        protected usersQueryRepository: UsersQueryRepository,
-        // protected jwtService: JwtService
+        @inject(AuthService) protected authService: AuthService,
+        @inject(UsersQueryRepository) protected usersQueryRepository: UsersQueryRepository,
+        @inject(JwtService) protected jwtService: JwtService
     ) {}
 
     async LoginUser(req: RequestWithUsers<authInput>, res: Response) {
@@ -47,7 +49,7 @@ export class AuthController {
     async refreshToken(req: Request, res: Response) {
         //the delay is so that the tokens are not the same
         await delay(200)
-        const twoToken = await jwtService.tokenUpdate(req.userId!, req.cookies.refreshToken!)
+        const twoToken = await this.jwtService.tokenUpdate(req.userId!, req.cookies.refreshToken!)
         if (!twoToken.data || twoToken.status === ResultStatus.Unauthorized) return res.sendStatus(401)
         addTokenInCookie(res, twoToken.data.refresh)
         return res.status(200).send({

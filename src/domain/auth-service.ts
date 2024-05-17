@@ -1,28 +1,28 @@
-import {EmailsManager} from "./managers/email-manager";
+
 import {UsersService} from "./users-service";
 import {UsersInputType} from "../model/usersType/inputModelTypeUsers";
 import {UsersRepository} from "../repositories/usersRepository";
 import {v4 as uuidv4} from "uuid";
 import {add} from "date-fns";
-import {RefreshTokenRepository} from "../repositories/refreshTokenRepository";
 import {UsersQueryRepository} from "../repositoriesQuery/user-query-repository";
 import {ResultStatus} from "../_util/enum";
-import {JwtService} from "./jwt-service";
 import {Result} from "../_util/result.type";
 import {twoTokenType} from "../model/authType/authType";
-import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import {settings} from "../setting";
-import {emailsManager, jwtService} from "../composition-root";
+import {inject, injectable} from "inversify";
+import {JwtService} from "./jwt-service";
+import {EmailsManager} from "./managers/email-manager";
 
-
+@injectable()
 export class AuthService {
+
     constructor(
-        protected usersService: UsersService,
-        protected usersRepository: UsersRepository,
-        protected usersQueryRepository: UsersQueryRepository,
-        // protected jwtService: JwtService,
-        // protected emailsManager:EmailsManager
+        @inject(UsersService) protected usersService: UsersService,
+        @inject(UsersRepository) protected usersRepository: UsersRepository,
+        @inject(UsersQueryRepository) protected usersQueryRepository: UsersQueryRepository,
+        @inject(JwtService) protected jwtService: JwtService,
+        @inject(EmailsManager) protected emailsManager:EmailsManager
     ) {}
 
     async login(loginOrEmail: string, password: string, userAgent: string, ip: string): Promise<Result<twoTokenType | null>> {
@@ -36,7 +36,7 @@ export class AuthService {
 
         const deviceTitle = userAgent.split(" ")[1] || 'unknown';
         //create token
-        const twoToken = await jwtService.twoToken(user.data.id, deviceTitle, ip)
+        const twoToken = await this.jwtService.twoToken(user.data.id, deviceTitle, ip)
         if (!twoToken.data || twoToken.status === ResultStatus.Unauthorized) return {
             status: ResultStatus.Unauthorized,
             extensions: [{field: 'twoToken', message: "The token has not been created(AuthService)"}],
@@ -70,7 +70,7 @@ export class AuthService {
             return null
         }
 
-        emailsManager
+        this.emailsManager
             .sendMessageWitchConfirmationCode(findUser.data.accountData.email, findUser.data.accountData.login, findUser.data.emailConfirmation.confirmationCode)
         return user
     }
@@ -107,13 +107,13 @@ export class AuthService {
 
         if (!user) return {status: false, message: `user is confirmed user: ${user}`};
 
-        emailsManager
+        this.emailsManager
             .sendMessageWitchConfirmationCode(user.accountData.email, user.accountData.login, user.emailConfirmation!.confirmationCode)
         return {status: true, message: ``}
     }
 
     async refreshToken(oldToken: string) {
-        const checkToken = await jwtService.checkToken(oldToken);
+        const checkToken = await this.jwtService.checkToken(oldToken);
         if (!checkToken) {
             return null
         }
@@ -133,7 +133,7 @@ export class AuthService {
 
         if (!UpdateRecoveryCode) return {status: false, message: `user is confirmed user: ${UpdateRecoveryCode}`};
 
-        emailsManager
+        this.emailsManager
             .emailsManagerRecovery(email, newRecoveryCode)
 
         return {status: true, message: ``}

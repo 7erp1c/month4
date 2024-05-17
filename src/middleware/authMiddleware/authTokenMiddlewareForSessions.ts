@@ -1,6 +1,10 @@
 import {Request, Response, NextFunction} from "express";
-import {jwtService, securityQueryRepository} from "../../composition-root";
+import {JwtService} from "../../domain/jwt-service"
+import {container} from "../../composition-root";
+import {SecurityQueryRepository} from "../../repositoriesQuery/security-query-repository";
 
+const jwtService = container.get<JwtService>(JwtService)
+const securityQueryRepository = container.get<SecurityQueryRepository>(SecurityQueryRepository)
 
 export const authTokenMiddlewareForSessions = async (req: Request, res: Response, next: NextFunction) => {
 

@@ -7,7 +7,10 @@ import {
 import {errorsValidation} from "../middleware/errorsValidation";
 import {authTokenLogoutMiddleware} from "../middleware/authMiddleware/authLogoutUser";
 import {authRefreshTokenMiddleware} from "../middleware/authMiddleware/authRefreshTokenUser";
-import {authController} from "../composition-root";
+import {container} from "../composition-root";
+import {AuthController} from "./controllers/auth-controller";
+
+const authController = container.resolve<AuthController>(AuthController)
 
 
 export const authRouter = Router({})

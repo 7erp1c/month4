@@ -1,9 +1,10 @@
 import {EmailAdapter} from "../../repositories/adapters/email-adapter";
+import {inject, injectable} from "inversify";
 
 
-
+@injectable()
 export class EmailsManager  {
-     constructor(protected emailAdapter:EmailAdapter) {}
+     constructor(@inject(EmailAdapter) protected emailAdapter:EmailAdapter) {}
     async sendMessageWitchConfirmationCode(email: string, login: string, code: string) {
         //отправку сообщения лучше обернуть в try-catch,
         //чтобы при ошибке(например отвалиться отправка) приложение не падало

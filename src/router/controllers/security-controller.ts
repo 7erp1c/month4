@@ -2,13 +2,16 @@ import {Request, Response} from "express";
 import {SecurityQueryRepository} from "../../repositoriesQuery/security-query-repository";
 import {SecurityService} from "../../domain/security-service";
 import {RequestWithDelete} from "../../typeForReqRes/helperTypeForReq";
-import {jwtService} from "../../composition-root";
-import {_delete_one_} from "../../typeForReqRes/security-input-model/security-input";
 
+import {_delete_one_} from "../../typeForReqRes/security-input-model/security-input";
+import {inject, injectable} from "inversify";
+import {JwtService} from "../../domain/jwt-service";
+@injectable()
 export class SecurityController {
     constructor(
-        protected securityQueryRepository:SecurityQueryRepository,
-        protected securityService:SecurityService
+       @inject(SecurityQueryRepository) protected securityQueryRepository:SecurityQueryRepository,
+       @inject(SecurityService) protected securityService:SecurityService,
+       @inject(JwtService) protected jwtService:JwtService
     ) {
     }
     async getDevices(req: Request, res: Response) {
@@ -32,7 +35,7 @@ export class SecurityController {
             return
         }
         //протуханим токен
-        await jwtService.updateDBJWT(req.cookies.refreshToken)
+        await this.jwtService.updateDBJWT(req.cookies.refreshToken)
         res.sendStatus(204);
     }
 }

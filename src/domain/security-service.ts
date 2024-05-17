@@ -1,16 +1,17 @@
-import {SessionsAddDB} from "../model/authType/authType";
+import {RefreshTokenPayloadType, SessionsAddDB} from "../model/authType/authType";
 import {SecurityRepository} from "../repositories/securityRepository";
 import {SecurityQueryRepository} from "../repositoriesQuery/security-query-repository";
-import { SecurityModel} from "../db/mongoose/models";
-import {jwtService} from "../composition-root";
-
+import {RefreshTokenModel, SecurityModel} from "../db/mongoose/models";
+import {inject, injectable} from "inversify";
+import {JwtService} from "./jwt-service";
+import jwt from "jsonwebtoken";
+@injectable()
 export class SecurityService  {
     constructor(
-        protected securityRepository:SecurityRepository,
-        protected securityQueryRepository:SecurityQueryRepository
+        @inject(SecurityRepository) protected securityRepository:SecurityRepository,
     ) {}
     async createAuthSession(refreshToken: string, deviceTitle: string, ip: string) {
-        const decodedToken = await jwtService.decodeRefreshToken(refreshToken);
+        const decodedToken = await this._decodeRefreshToken(refreshToken);
         if (!decodedToken) return null;
         // Преобразование iat и exp в строки формата ISO 8601
         const decodeIat = Number(decodedToken.iat)
@@ -35,7 +36,9 @@ export class SecurityService  {
         return newSession;
     }
     async deleteDevicesSessions(userId: string, token: string) {
-        await this.securityRepository.deleteDevicesSessions(userId, token)
+        const decode = await this._decodeRefreshToken(token)
+        const deviceId = decode!.deviceId as string
+        await this.securityRepository.deleteDevicesSessions(userId, deviceId)
         return  SecurityModel.countDocuments()
 
     }
@@ -44,34 +47,55 @@ export class SecurityService  {
     }
     //обновляем данные в db после обновления refresh token
     async updateDataRefreshTokenInSession(token: string) {
-        return await this.securityRepository.updateDataToken(token)
+        const decode = await this._decodeRefreshToken(token)
+        const decodeIat = Number(decode?.iat)
+        const decodeExp = Number(decode?.exp)
+        const iat = new Date(decodeIat * 1000).toISOString();
+        const exp = new Date(decodeExp * 1000).toISOString();
+        return await this.securityRepository.updateDataToken({
+            userId: decode!.userId,
+            deviceId:decode!.deviceId,
+            iat,
+            exp
+        })
     }
     //поиск сессии
     async searchSession(token: string) {
-        const decode = await jwtService.decodeRefreshToken(token)
+        const decode = await this._decodeRefreshToken(token)
         if (!decode) {
             return null
         }
-        const searchSession = await this.securityQueryRepository.findSessionByDeviceId(decode.deviceId)
+        const searchSession = await this.securityRepository.findSessionByDeviceId(decode.deviceId)
         if (!searchSession) {
             return null
         }
         return true
     }
     async clean(token: string) {
-        const decode = await jwtService.decodeRefreshToken(token)
+        const decode = await this._decodeRefreshToken(token)
         if (!decode)return null
         //удаляем сессию
         const delAllS = await this.deleteDevicesSessionById(decode?.deviceId)
         //удаляем токен из DB
-        const delAllT = await jwtService.deleteByDeviseId( decode?.deviceId)
+        const delAllT =  await RefreshTokenModel.deleteMany({deviceId: decode?.deviceId})
         if(!delAllS||!delAllT){
             return null
         }
         return true
     }
-    async title(agent:string){
+    async _decodeRefreshToken(token: string): Promise<RefreshTokenPayloadType | null> {
 
+        const decodedToken: any = await this.decode(token);
+        if (!decodedToken) return null;
+        return {
+            userId: decodedToken.userId,
+            deviceId: decodedToken.deviceId,
+            iat: decodedToken.iat,
+            exp: decodedToken.exp
+        }
+    }
+    async decode(token: string) {
+        return jwt.decode(token)
     }
 
 }

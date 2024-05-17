@@ -1,8 +1,9 @@
 import {OldTokenDB} from "../model/authType/authType";
 //import {connectMongoDb} from "../../db/mongo-memory-server/connect-mongo-db";
 import {RefreshTokenModel} from "../db/mongoose/models";
+import {injectable} from "inversify";
 
-
+@injectable()
 export class RefreshTokenRepository   {
 
      async addToken(createToken:OldTokenDB){

@@ -2,7 +2,8 @@ import request from "supertest";
 import jwt from "jsonwebtoken";
 
 export const loginUser = async (app:any)=>{
-     let testRefreshToken ;
+     let testRefreshToken,
+         testAccessToken;
     const loginUser = await request(app).post("/auth/login")
         .send({
             "loginOrEmail": "ul_tray@bk.ru",
@@ -13,6 +14,7 @@ export const loginUser = async (app:any)=>{
     expect(loginUser.body).toMatchObject({
         accessToken: expect.any(String)
     });
+    testAccessToken = loginUser.body.accessToken;
     // Проверка, что refreshToken добавлен в куки
     const cookiesArray1 = loginUser.header["set-cookie"];
     console.log("___________" + cookiesArray1[0],cookiesArray1[1])
@@ -27,7 +29,8 @@ export const loginUser = async (app:any)=>{
     const logUser = loginUser.body
     return {
         logUser,
-        testRefreshToken
+        testRefreshToken,
+        testAccessToken
     }
 }
  export const findIdDeviceSession = async (refresh:string)=>{

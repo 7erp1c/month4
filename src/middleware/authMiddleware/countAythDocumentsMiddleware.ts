@@ -1,7 +1,10 @@
 import {NextFunction, Request, Response} from "express";
 import {settings} from "../../setting";
-import {securityRepository} from "../../composition-root";
+import {container} from "../../composition-root";
+import {AuthService} from "../../domain/auth-service";
+import {SecurityRepository} from "../../repositories/securityRepository";
 
+const securityRepository = container.get<SecurityRepository>(SecurityRepository)
 
 export const apiReqLimitMiddleware  = async (req: Request, res: Response, next: NextFunction) => {
     // req.baseUrl передает некорректные данные,он не заходить в глубь запроса, подтягивает /auth, а должен /auth/login

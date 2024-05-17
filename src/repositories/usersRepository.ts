@@ -2,8 +2,9 @@
 import {createUserAccAuth} from "../model/usersType/inputModelTypeUsers";
 //import {connectMongoDb} from "../db/mongo-memory-server/connect-mongo-db";
 import {UserModel} from "../db/mongoose/models";
+import {injectable} from "inversify";
 
-
+@injectable()
 export class UsersRepository  {
 
 //post(/)

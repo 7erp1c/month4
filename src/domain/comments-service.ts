@@ -6,8 +6,10 @@ import {ResultStatus} from "../_util/enum";
 import {CommentsQueryRepository} from "../repositoriesQuery/comments-query-repository";
 import {Result} from "../_util/result.type";
 import {PostsService} from "./posts-service";
-import {usersQueryRepository} from "../composition-root";
+import {injectable} from "inversify";
+import {container} from "../composition-root";
 
+const usersQueryRepository = container.get<UsersQueryRepository>(UsersQueryRepository)
 
 export const CommentsService = {
     async createLikeComment(commentId: string, status: LikeStatusType, userId: string) {

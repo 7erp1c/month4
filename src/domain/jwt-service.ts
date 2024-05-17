@@ -7,14 +7,15 @@ import {RefreshTokenPayloadType, twoTokenType} from "../model/authType/authType"
 import {SecurityService} from "./security-service";
 import {Result} from "../_util/result.type";
 import {ResultStatus} from "../_util/enum";
-import {RefreshTokenModel} from "../db/mongoose/models";
-import {refreshTokenRepository} from "../composition-root";
+import {inject, injectable} from "inversify";
 
 
+
+@injectable()
 export class JwtService  {
     constructor(
-        protected refreshTokenRepository:RefreshTokenRepository,
-        protected securityService:SecurityService
+        @inject(RefreshTokenRepository) protected refreshTokenRepository:RefreshTokenRepository,
+        @inject(SecurityService) protected securityService:SecurityService
     ) {}
     async addTokenInDB(token: string) {
          const decode = await this.decodeRefreshToken(token)
@@ -121,7 +122,7 @@ export class JwtService  {
         }
     }
     async checkToken(token:string){
-        return await refreshTokenRepository.checkToken(token)
+        return await this.refreshTokenRepository.checkToken(token)
 
     }
     async updateRefreshValid(token:string) {

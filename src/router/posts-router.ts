@@ -22,12 +22,11 @@ import {QueryPostRequestType, SortPostRepositoryType} from "../model/postsType/p
 import {PostsQueryRepository} from "../repositoriesQuery/posts-query-repository";
 import {CommentsService} from "../domain/comments-service";
 import {CommentsQueryRepository} from "../repositoriesQuery/comments-query-repository";
-import {LikeStatusType, SortCommentsRepositoryType} from "../model/commentsType/commentsType";
+import {SortCommentsRepositoryType} from "../model/commentsType/commentsType";
 import {paginatorValidator} from "../middleware/sortingAndPaginationMiddleware";
 import {authTokenMiddelware} from "../middleware/postMiddelware/aurhTokenMiddelware";
 import {errorsHandler404} from "../_util/errors-handler";
 import {ResultStatus} from "../_util/enum";
-import {getCommentTokenMiddelware} from "../middleware/commentsMiddelware/getCommentAllLikes";
 import {getUserIdFromAccess} from "../middleware/getUserId/getUserIdFromAccess";
 
 
